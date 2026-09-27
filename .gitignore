@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 venv/
 **/venv/
-
+env/
 # Regenerable outputs — NOTE: backend/artifacts/ is intentionally kept
 # out of this list so the trained models ship with the project and it
 # runs out of the box without retraining.
@@ -21,3 +21,7 @@ data/heart.csv
 !data/heart_combined.csv
 !data/DATASET_PROVENANCE.md
 !data/build_combined.py
+!docs/breast_benchmark.log
+
+response.txt
+frontend/response.txt

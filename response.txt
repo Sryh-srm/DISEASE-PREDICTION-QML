@@ -1,0 +1,910 @@
+# COMPLETE BACKEND AUDIT REPORT
+
+## PART 1 — REPOSITORY STRUCTURE
+
+### A. Backend
+
+* **backend/** - Contains the core FastAPI application and ML components
+  * **app.py** - Main FastAPI application entry point with prediction endpoints, model loading, and API routes
+  * **preprocess.py** - Data preprocessing pipeline handling imputation, scaling, supervised ANOVA feature selection (top 4 features), and rescaling to [0, π] for quantum angle encoding
+  * **quantum_model.py** - Implementation of quantum machine learning models: Variational Quantum Classifier (VQC), Quantum Ensemble (bagged VQCs), and Quantum Kernel Classifier (projective quantum kernel SVM)
+  * **train.py** - Complete training script that downloads data, preprocesses, trains quantum and classical models, builds stacked hybrid committee, evaluates performance, and saves artifacts
+  * **artifacts/** - Directory containing all saved model artifacts:
+    * **preprocessor.pkl** - Fitted preprocessing pipeline (imputer, scaler, selector, angle scaler)
+    * **vqc_model.pkl** - Trained standalone Variational Quantum Classifier
+    * **ensemble_model.pkl** - Trained bagged VQC ensemble (5 members)
+    * **qkernel_model.pkl** - Trained quantum kernel SVM with CV-tuned regularization parameter C
+    * **committee.pkl** - Stacked hybrid committee bundle (member names, meta-learner coefficients, tuned threshold)
+    * **classical_members.pkl** - Tuned classical SVM and Logistic Regression models for the committee
+    * **feature_importance.json** - Feature importance data for UI explainability (from Random Forest on selected features)
+    * **vqc_metrics.pkl** - Backward compatibility file containing VQC test metrics
+
+### B. Existing QML Frontend
+
+* **frontend/** - Contains the legacy QML user interface
+  * **main.qml** - Main application window composing PatientForm, ResultDisplay, and HistoryList components
+  * **PatientForm.qml** - Patient data entry form with all 13 clinical features (age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal)
+  * **ResultDisplay.qml** - Component showing prediction probability, risk level (Low/Moderate/High), recommendation, and feature importance bars
+  * **HistoryList.qml** - Component displaying recent prediction history
+  * **run_ui.py** - Launcher script that starts the FastAPI backend (if not running) and opens the QML UI
+
+**QML ↔ Python Communication**: The frontend communicates exclusively with the backend via HTTP requests to FastAPI endpoints:
+  * `/predict` - Single patient prediction (POST with JSON patient data)
+  * `/predict/csv` - Batch scoring (POST with CSV file upload)
+  * `/feature_importance` - GET request to fetch feature importance data for explainability
+  * `/health` - GET request to check backend status
+
+### C. Other
+
+* **data/** - Dataset files
+  * **heart.csv** - Cleveland Heart Disease dataset (303 patients)
+  * **heart_combined.csv** - Combined dataset from all 4 UCI sources (918 patients) built by `data/build_combined.py`
+  * **DATASET_PROVENANCE.md** - Documentation of combined dataset construction
+  * **build_combined.py** - Script to construct the combined 918-patient dataset
+
+* **scripts/** - Utility and verification scripts
+  * **verify_no_leakage.py** - Proofs that reported accuracies are leakage-free
+  * **verify_combined.py** - Verification on combined 918 dataset
+  * **push_accuracy.py** - Experiment to expand committee with classical members
+  * **verify_accuracy.py** - Quick accuracy verification
+  * **eval_breast_cancer.py** / **eval_pima_diabetes.py** - Extension experiments to other datasets (not part of core heart disease predictor)
+
+* **docs/** - Documentation files
+  * **PITCH_3MIN.md** - 3-minute pitch deck
+  * **breast_benchmark.log** / **pima_benchmark.log** - Logs from extension experiments
+
+* **plots/** - Generated visualization outputs
+  * **model_comparison.png** - Bar chart comparing model performance metrics
+
+* **Configuration files**
+  * **.gitignore** - Git ignore rules
+  * **requirements.txt** - Core dependencies (FastAPI, Uvicorn, PennyLane, scikit-learn, pandas, numpy, matplotlib, PyQt5, etc.)
+  * **requirements-lock.txt** - Fully pinned transitive dependency chain for bit-for-bit reproducibility
+  * **README.md** - Comprehensive project documentation
+  * **AGENTS.md** - Agent instructions (this file)
+  * **AUDIT.md** - Audit methodology documentation
+  * **DELIVERY.md** - Per-deliverable file/metrics mapping
+  * **HOW_IT_WORKS.md** - Detailed explanation of the hybrid quantum-classical architecture
+  * **verify_heavy.log** - Log from verification runs
+
+## PART 2 — FASTAPI BACKEND
+
+### FastAPI Application Entry Point: `backend/app.py`
+
+**Application Initialization:**
+- Creates FastAPI instance with `lifespan` context manager for startup/shutdown logic
+- Configures CORS middleware to allow all origins (for frontend communication)
+- Defines Pydantic models for request/response validation
+
+**Application Startup/Shutdown Logic (`lifespan` context manager):**
+1. Loads preprocessing pipeline from `backend/artifacts/preprocessor.pkl`
+2. Loads standalone VQC model from `backend/artifacts/vqc_model.pkl`
+3. Attempts to load stacked hybrid committee artifacts:
+   - Checks for existence of all required artifacts (COMMITTEE_PATH, ENSEMBLE_PATH, QKERNEL_PATH, CLASSICAL_MEMBERS_PATH)
+   - Loads quantum kernel SVM, VQC ensemble, and standalone VQC models
+   - Loads classical SVM and Logistic Regression models
+   - Reconstructs meta-learner LogisticRegressionStub from stored coefficients
+   - Sets committee_threshold from bundled threshold value
+   - Loads feature importance JSON if available
+4. On shutdown: logs shutdown message
+
+**API Endpoints:**
+
+| Endpoint | Method | Purpose | Request | Response | Backend Function |
+| -------- | ------ | ------- | ------- | -------- | ---------------- |
+| `/predict` | POST | Single patient prediction | PatientData JSON (13 features) | PredictionResponse (probability, risk, recommendation, threshold, model) | `predict()` function |
+| `/predict/csv` | POST | Batch scoring CSV upload | multipart/form-data file upload | BatchPredictionResponse (n_rows, threshold, model, predictions array) | `predict_csv()` function |
+| `/health` | GET | Health check | None | JSON: {status, artifacts_loaded, model, threshold} | `health()` function |
+| `/feature_importance` | GET | Feature importance for explainability | None | JSON: {features: [...], importance: [...]} | `get_feature_importance()` function |
+
+**Request Models/Schemas:**
+- `PatientData`: 13 clinical features with validation constraints:
+  * age: float (0-120)
+  * sex: int (0-1)
+  * cp: int (1-4)
+  * trestbps: float (80-250)
+  * chol: float (100-600)
+  * fbs: int (0-1)
+  * restecg: int (0-2)
+  * thalach: float (60-220)
+  * exang: int (0-1)
+  * oldpeak: float (0-10)
+  * slope: int (1-3)
+  * ca: int (0-3)
+  * thal: int (3-7)
+
+**Response Models/Schemas:**
+- `PredictionResponse`:
+  * probability: float (0-1)
+  * risk: string ("Low"/"Moderate"/"High")
+  * recommendation: string (clinical advice)
+  * threshold: float (decision threshold)
+  * model: string (model name identifier)
+- `BatchPredictionResponse`:
+  * n_rows: int
+  * threshold: float
+  * model: string
+  * predictions: array of objects with row index, probability, risk, recommendation
+
+**Validation:**
+- Pydantic automatic validation on `PatientData` fields
+- HTTP 400 errors for invalid CSV parsing or missing required columns
+- HTTP 503 if models/artifacts not loaded (calls to `train.py` required first)
+- Custom preprocessing error handling with HTTP 400
+
+**Error Handling:**
+- `HTTPException` raised for various error conditions with appropriate status codes
+- Specific error messages for preprocessing failures, missing artifacts, CSV parsing issues
+- Fallback to standalone VQC if committee artifacts missing (warning logged)
+
+**CORS Configuration:**
+- `allow_origins=["*"]` (allows frontend from any origin)
+- `allow_credentials=True`
+- `allow_methods=["*"]`
+- `allow_headers=["*"]`
+
+**Middleware:**
+- CORSMiddleware configured as shown above
+- No additional custom middleware
+
+**Environment Variables:**
+- None explicitly used in app.py (configuration is hardcoded or loaded from artifacts)
+- ARTIFACT_DIR derived from `__file__` location
+- API_PORT=8000 hardcoded in frontend/run_ui.py (not in backend)
+
+**Configuration Files:**
+- No external configuration files; all configuration is either:
+  * Hardcoded in app.py (CORS settings, artifact paths)
+  * Derived from file locations (ARTIFACT_DIR)
+  * Loaded from saved artifacts (threshold, model parameters, etc.)
+  * Set via command line when starting server (e.g., uvicorn host/port)
+
+## PART 3 — COMPLETE DATA FLOW
+
+**Data Flow Through Backend:**
+
+1. **Input Entry**
+   - Single prediction: JSON payload via `/predict` endpoint validated by `PatientData` Pydantic model
+   - Batch prediction: CSV file upload via `/predict/csv` endpoint
+
+2. **Validation**
+   - Single: Pydantic validates data types and ranges (age 0-120, sex 0-1, etc.)
+   - Batch: Checks for required columns (`FEATURES` list) and non-empty DataFrame
+   - Both: HTTP 400 errors for validation failures with descriptive messages
+
+3. **Preprocessing** (`_score_frame` → `transform_preprocessor`)
+   - Selects only the 13 `FEATURES` columns
+   - Applies fitted preprocessing pipeline (loaded during startup):
+     * `SimpleImputer(strategy="median")` - fills missing values with column median
+     * `StandardScaler()` - zero mean, unit variance scaling
+     * `SelectKBest(score_func=f_classif, k=4)` - supervised ANOVA selects top 4 features
+     * `MinMaxScaler(feature_range=(0.0, np.pi))` - rescales to [0, π] for quantum angle encoding
+   - Output: numpy array of shape `(n_samples, 4)` containing the selected, transformed features
+
+4. **Feature Engineering/Selection**
+   - Performed by `SelectKBest` with `f_classif` (ANOVA F-value) during preprocessing fitting
+   - Selected features stored in preprocessing pipeline and retrievable via `selected_feature_indices()`
+   - Currently selects: `["thal", "thalach", "ca", "exang"]` (as seen in feature_importance.json)
+
+5. **Scaling/Normalization**
+   - Two-stage scaling in pipeline:
+     * StandardScaler: zero mean, unit variance
+     * MinMaxScaler to [0, π]: prepares data for quantum angle embedding (multiplied by π inside quantum circuits)
+
+6. **Feature Encoding**
+   - Classical features → quantum angle encoding via `RY(π * scaled_feature)` in quantum circuits
+   - Handled in `quantum_model.py`:
+     * `QuantumModel.circuit`: `qml.AngleEmbedding(np.pi * input_scales * X, wires=range(self.n_qubits), rotation="Y")`
+     * `QuantumKernelClassifier.feature_map`: Same angle embedding for quantum kernel computation
+
+7. **Model Inference**
+   - Depends on model availability:
+     * **Primary** (if committee loaded): `_committee_proba()` function
+       1. Gets probability predictions from each committee member:
+          - Quantum Kernel SVM (`qkernel.predict_proba(X)[:, 1]`)
+          - VQC Ensemble (`ensemble.predict_proba(X)[:, 1]`)
+          - Standalone VQC (`model.predict_proba(X)[:, 1]`)
+          - Classical SVM (`members["svm"].predict_proba(X)[:, 1]`)
+          - Classical Logistic Regression (`members["lr"].predict_proba(X)[:, 1]`)
+       2. Stacks probabilities into columns: `[p_qkernel, p_ensemble, p_vqc, p_svm, p_lr]`
+       3. Applies meta-learner LogisticRegressionStub to get final probability
+     * **Fallback** (if committee missing): Uses standalone VQC directly
+       * `model.predict_proba(X)[:, 1]`
+
+8. **Post-processing**
+   - Converts raw probability to risk level using `_risk_level()`:
+     * Calculates risk bands: `moderate_low = 0.6 * threshold`, `high = min(1.4 * threshold, 0.95)`
+     * "Low" if prob < moderate_low
+     * "Moderate" if moderate_low ≤ prob < high
+     - "High" if prob ≥ high
+   - Generates recommendation using `_recommendation()` based on same thresholds
+   - For batch predictions: applies same logic to each row
+
+9. **Final Output**
+   - Returns JSON response with:
+     * `probability`: float (final prediction probability for class 1/disease)
+     * `risk`: string ("Low"/"Moderate"/"High")
+     * `recommendation`: string (clinical advice)
+     * `threshold`: float (decision threshold used)
+     * `model`: string (identifier: "hybrid-quantum-committee (stacked)" or "vqc")
+
+## PART 4 — CLASSICAL MACHINE LEARNING
+
+**ACTIVELY USED Models:**
+
+1. **Tuned Classical SVM**
+   - **Algorithm**: Support Vector Machine with RBF kernel
+   - **Purpose**: Classical member of hybrid quantum-classical committee
+   - **Source File**: `backend/train.py` (lines 99-102, 370-376, 437-38)
+   - **Training Code**: GridSearchCV with 5-fold CV on parameters `{"C": [0.5, 1.0, 3.0], "gamma": ["scale", 0.5]}`
+   - **Inference Code**: `members["svm"].predict_proba(X)[:, 1]` in `_committee_proba()`
+   - **Saved Model File**: `backend/artifacts/classical_members.pkl` (under key "svm")
+   - **Loading Mechanism**: Loaded in `app.py` lifespan -> `pickle.load(CLASSICAL_MEMBERS_PATH)`
+   - **Input Features**: 4 selected features after preprocessing (`["thal", "thalach", "ca", "exang"]`)
+   - **Input Shape**: `(n_samples, 4)`
+   - **Output**: Probability of class 1 (disease present)
+   - **Class Labels**: [0, 1] where 0=no disease, 1=disease
+   - **Probability/Confidence Output**: Yes, via `predict_proba()`
+   - **Preprocessing Requirements**: Requires same preprocessing pipeline (impute, scale, select k=4, angle scale)
+   - **Scaler/Encoder Dependencies**: Depends on full preprocessing pipeline
+   - **Connected to Inference Pipeline**: YES - used in committee probability calculation
+
+2. **Tuned Classical Logistic Regression**
+   - **Algorithm**: Logistic Regression with L2 regularization
+   - **Purpose**: Classical member of hybrid quantum-classical committee
+   - **Source File**: `backend/train.py` (lines 103-106, 377-381, 438-39)
+   - **Training Code**: GridSearchCV with 5-fold CV on parameters `{"C": [0.1, 0.5, 1.0, 3.0]}`
+   - **Inference Code**: `members["lr"].predict_proba(X)[:, 1]` in `_committee_proba()`
+   - **Saved Model File**: `backend/artifacts/classical_members.pkl` (under key "lr")
+   - **Loading Mechanism**: Loaded in `app.py` lifespan -> `pickle.load(CLASSICAL_MEMBERS_PATH)`
+   - **Input Features**: 4 selected features after preprocessing
+   - **Input Shape**: `(n_samples, 4)`
+   - **Output**: Probability of class 1 (disease present)
+   - **Class Labels**: [0, 1] where 0=no disease, 1=disease
+   - **Probability/Confidence Output**: Yes, via `predict_proba()`
+   - **Preprocessing Requirements**: Requires same preprocessing pipeline
+   - **Scaler/Encoder Dependencies**: Depends on full preprocessing pipeline
+   - **Connected to Inference Pipeline**: YES - used in committee probability calculation
+
+**PRESENT BUT NOT CONNECTED Models:**
+
+1. **Random Forest Classifier**
+   - **Algorithm**: Ensemble of decision trees
+   - **Purpose**: Used ONLY for feature importance generation (not for prediction)
+   - **Source File**: `backend/train.py` (lines 95-98, 114-138, 336-346)
+   - **Training Code**: GridSearchCV with 5-fold CV on parameters `{"n_estimators": [100, 300], "max_depth": [None, 4, 6]}`
+   - **Inference Code**: Not used for prediction; only `model.feature_importances_` accessed
+   - **Saved Model File**: NOT saved as artifact (only feature importances saved)
+   - **Loading Mechanism**: N/A (not saved)
+   - **Input Features**: 13 original features (before selection)
+   - **Input Shape**: `(n_samples, 13)`
+   - **Output**: Would be class predictions if used
+   - **Class Labels**: [0, 1]
+   - **Probability/Confidence Output**: Would be available if used
+   - **Preprocessing Requirements**: Requires preprocessing pipeline
+   - **Scaler/Encoder Dependencies**: Depends on preprocessing pipeline
+   - **Connected to Inference Pipeline**: NO - only used to generate feature importance for UI explainability
+
+2. **Baseline Quantum Models (Individual)**
+   While quantum models are used, their INDIVIDUAL predictions are not served directly:
+   - **Quantum Kernel SVM**
+   - **VQC Ensemble**
+   - **Standalone VQC**
+   - **Purpose**: These are used as COMMITTEE MEMBERS but their individual predictions are not exposed via separate endpoints
+   - **Connected to Inference Pipeline**: YES, but only as committee members - no direct API access to individual model outputs
+
+## PART 5 — QML / PENNYLANE
+
+### Quantum Configuration
+
+* **Number of qubits**: 4 (hardcoded in `QuantumModel.__init__` default `n_qubits=4`, used throughout)
+* **Number of classical input features**: 4 (after preprocessing feature selection - matches qubit count)
+* **Quantum device**: `"default.qubit"` (PennyLane's built-in pure Python simulator)
+* **Simulator/hardware**: Software simulator only (no hardware backend specified or used)
+* **Shots**: Not specified (defaults to None → exact expectation values, not sampling)
+* **Device configuration**: Standard `default.qubit` device with 4 wires
+
+### Feature Encoding
+
+* **Encoding method**: Angle embedding using `RY(π * scaled_feature)` rotations
+* **Gates used**:
+  * Primary encoding: `RY` gates
+  * Additional encoding: `RZ` gates with constant offset (see quantum_model.py lines 76-80)
+  * Trainable rotations: `Rot` gates (combined RX-RY-RZ)
+  * Entanglement: `CNOT` gates in ring topology
+* **Mapping between classical features and quantum gates**:
+  * Feature 0 → qubit 0 `RY` gate
+  * Feature 1 → qubit 1 `RY` gate
+  * Feature 2 → qubit 2 `RY` gate
+  * Feature 3 → qubit 3 `RY` gate
+  * (Direct 1:1 mapping after feature selection)
+* **Input ranges**: Features scaled to [0, 1] by preprocessing, then multiplied by π → [0, π]
+* **Scaling/normalization before encoding**:
+  * StandardScaler (zero mean, unit variance)
+  * MinMaxScaler to [0, 1]
+  * Final multiplication by π in quantum circuits → [0, π]
+
+### Circuit
+
+* **Circuit structure**:
+  * Repeated `layers` times (default 4):
+    1. Encoding block: `RY(π * s_k * x_k)` then `RZ(s_k)` on each qubit
+    2. Trainable block: `StronglyEntanglingLayers` (Rot gates + CNOT ring)
+  * Data re-uploading: Input features re-encoded at the start of each layer
+* **Gates**:
+  * Single-qubit: `RY`, `RZ`, `Rot` (which decomposes to RX-RY-RZ)
+  * Two-qubit: `CNOT` (nearest-neighbor ring connectivity)
+* **Ansatz**: `StronglyEntanglingLayers` ansatz with data re-uploading
+* **Ansatz depth**: Equal to `layers` parameter (default 4)
+* **Entanglement topology**: Ring (each qubit i connected to (i+1) mod n_qubits via CNOT)
+* **Parameterized gates**:
+  * `Rot` gates: 3 parameters per qubit per layer → total `(layers × n_qubits × 3)`
+  * Input scales: `n_qubits` parameters (if `input_scales=True`)
+  * Readout weights: `n_qubits` parameters
+  * Bias: 1 parameter
+* **Measurements**:
+  * Measures `⟨Z_k⟩` (PauliZ expectation) on each qubit k
+  * Returns list of expectation values, one per qubit
+* **Observables**: PauliZ operators on individual qubits (no multi-qubit observables)
+
+### Training
+
+* **Dataset**: Preprocessed training data (after train/test split)
+* **Loss Function**: Mean squared error between predictions (±1 target) and `y_target = 2*y - 1` (maps 0/1 to -1/+1)
+* **Optimizer**: Adam optimizer with cosine learning rate annealing
+* **Learning rate**:
+  * Initial: 0.15 (default in `QuantumModel.__init__`)
+  * Schedule: Cosine annealing from learning_rate down to 1% of it over epochs
+* **Epochs/iterations**: 120 (default in `QuantumModel.__init__` and `train.py`)
+* **Trainable parameters**:
+  * Weights: `(layers, n_qubits, 3)`
+  * Out weights: `(n_qubits,)`
+  * Bias: 1
+  * Scales: `(n_qubits,)` (if `input_scales=True`)
+  * Total: `(4×4×3) + 4 + 1 + 4 = 57` trainable parameters for default config
+* **Training procedure**:
+  * Full-batch training (no mini-batches)
+  * Gradient computed via PennyLane's autograd/backprop
+  * Parameter updates via AdamOptimizer
+  * Verbose logging every epoch//6 epochs showing loss and training accuracy
+* **Saved trained parameters/model**:
+  * Saved via `save_model()` method to pickle files
+  * Contains: n_qubits, layers, device, weights, out_weights, bias, scales
+
+### Inference
+
+* **How inference is invoked**:
+  * Through `predict_proba()` method which calls `_raw_predictions()` then maps to [0,1]
+  * `_raw_predictions()`:
+    1. Executes quantum circuit with current parameters to get `⟨Z_k⟩` expectations
+    2. Combines expectations: `stacked @ out_weights + bias`
+    3. Maps from [-1,1] to [0,1] via `(raw + 1)/2` with clipping
+* **Input required**: Preprocessed features (4-dimensional after selection and scaling)
+* **Output produced**:
+  * `predict()`: Binary class predictions (0 or 1)
+  * `predict_proba()`: Probability array `[prob_class_0, prob_class_1]`
+* **Post-processing**:
+  * In quantum models: maps raw expectation values ([-1,1] range) to probabilities ([0,1])
+  * In API: applies risk bands and recommendations based on threshold
+* **Classification/risk calculation**:
+  * Binary threshold at probability 0.5 for class prediction
+  * Risk levels based on tuned threshold (Low/Moderate/High bands)
+
+### Noise/error mitigation
+
+* **Noise models**: **NOT IMPLEMENTED** - uses ideal `default.qubit` simulator
+* **ZNE (Zero Noise Extrapolation)**: **NOT IMPLEMENTED**
+* **Error mitigation**: **NOT IMPLEMENTED**
+* **Any other mitigation technique**: **NOT IMPLEMENTED**
+* **Assessment**: All quantum modeling assumes perfect, noise-free simulation
+
+**Classification by Implementation Status:**
+
+| Feature | Status |
+|---------|--------|
+| Number of qubits (4) | **IMPLEMENTED** |
+| Number of classical input features (4) | **IMPLEMENTED** |
+| Quantum device (default.qubit) | **IMPLEMENTED** |
+| Simulator/hardware (software only) | **IMPLEMENTED** |
+| Shots (exact expectation values) | **IMPLEMENTED** |
+| Device configuration | **IMPLEMENTED** |
+| Encoding method (AngleEmbedding with RY) | **IMPLEMENTED** |
+| Gates used (RY, RZ, Rot, CNOT) | **IMPLEMENTED** |
+| Feature-to-qubit mapping (1:1 after selection) | **IMPLEMENTED** |
+| Input ranges ([0, π] after scaling) | **IMPLEMENTED** |
+| Preprocessing scaling (StandardScaler → [0,1] → ×π) | **IMPLEMENTED** |
+| Circuit structure (re-uploading + StronglyEntanglingLayers) | **IMPLEMENTED** |
+| Gates (RY, RZ, Rot, CNOT) | **IMPLEMENTED** |
+| Ansatz (StronglyEntanglingLayers with re-uploading) | **IMPLEMENTED** |
+| Ansatz depth (layers parameter) | **IMPLEMENTED** |
+| Entanglement topology (ring) | **IMPLEMENTED** |
+| Parameterized gates (Rot, scales, weights, bias) | **IMPLEMENTED** |
+| Measurements (PauliZ expectation per qubit) | **IMPLEMENTED** |
+| Observables (single-qubit PauliZ) | **IMPLEMENTED** |
+| Dataset (preprocessed train/test split) | **IMPLEMENTED** |
+| Loss function (MSE on ±1 targets) | **IMPLEMENTED** |
+| Optimizer (Adam with cosine annealing) | **IMPLEMENTED** |
+| Learning rate (0.15 with annealing) | **IMPLEMENTED** |
+| Epochs/iterations (120) | **IMPLEMENTED** |
+| Trainable parameters (weights, out_weights, bias, scales) | **IMPLEMENTED** |
+| Training procedure (full-batch Adam) | **IMPLEMENTED** |
+| Saved trained parameters (pickle files) | **IMPLEMENTED** |
+| Inference invocation (predict_proba) | **IMPLEMENTED** |
+| Input required (4 features) | **IMPLEMENTED** |
+| Output produced (probabilities) | **IMPLEMENTED** |
+| Post-processing ([-1,1] to [0,1] mapping) | **IMPLEMENTED** |
+| Classification (threshold at 0.5) | **IMPLEMENTED** |
+| Risk level calculation (Low/Moderate/High bands) | **IMPLEMENTED** |
+| Noise models | **NOT IMPLEMENTED** |
+| ZNE | **NOT IMPLEMENTED** |
+| Error mitigation | **NOT IMPLEMENTED** |
+| Other mitigation techniques | **NOT IMPLEMENTED** |
+
+## PART 6 — ACTUAL QML OUTPUTS
+
+| Output | Actually Calculated? | Where Calculated | Data Type | Example/Range |
+| ------ | -------------------- | ---------------- | --------- | ------------- |
+| Class prediction | **YES** | `predict()` method in quantum models; `_predict_proba_any()` in app.py | Binary int (0 or 1) | 0 (no disease) or 1 (disease) |
+| Binary prediction | **YES** (same as class prediction) | Same as above | Binary int (0 or 1) | 0 or 1 |
+| Probability | **YES** | `predict_proba()` method in quantum models; `_predict_proba_any()` in app.py | Float [0,1] | 0.0 to 1.0 (e.g., 0.8525) |
+| Risk score | **YES** | `_risk_level()` function in app.py | String category | "Low", "Moderate", or "High" |
+| Risk category | **YES** (same as risk score) | Same as above | String | "Low"/"Moderate"/"High" |
+| Confidence | **INDirectly** | Probability value serves as confidence | Float [0,1] | Same as probability output |
+| Pauli expectation values | **YES** | `_raw_predictions()` → `circuit()` returns `[qml.expval(qml.PauliZ(i)) for i in range(self.n_qubits)]` | Array of floats [-1,1] | 4 values in range [-1,1] (one per qubit) |
+| Quantum state | **NO** | Not computed or returned anywhere | **NOT IMPLEMENTED** | N/A |
+| Statevector | **NO** | Only computed in QuantumKernelClassifier._states() for kernel, not saved/returned | **NOT IMPLEMENTED** (not exposed) | N/A |
+| Measurement probabilities | **INDirectly** | Derived from Pauli expectations via Born rule in `_raw_predictions()` | Implicit in probability calculation | Not directly exposed |
+| Feature importance | **YES** (but classical) | From Random Forest on selected features; saved in `feature_importance.json` | Float array | [0.3727, 0.2600, 0.2459, 0.1214] for ["thal", "thalach", "ca", "exang"] |
+| SHAP | **NO** | Not implemented anywhere | **NOT IMPLEMENTED** | N/A |
+| Shapley values | **NO** | Not implemented anywhere | **NOT IMPLEMENTED** | N/A |
+| Quantum explainability | **NO** | No quantum-specific explainability methods implemented | **NOT IMPLEMENTED** | N/A |
+| Circuit metrics | **NO** | No circuit depth, gate count, or similar metrics calculated | **NOT IMPLEMENTED** | N/A |
+| Runtime | **NO** | No timing/inference speed measurements exposed | **NOT IMPLEMENTED** | N/A |
+| Fidelity | **INDirectly** | Used in Quantum Kernel SVM via `|⟨ϕ(x)|ϕ(x')⟩|²` but not exposed as output | **IMPLEMENTED internally** | Used in kernel computation only |
+| Other telemetry | **NO** | No additional telemetry exposed | **NOT IMPLEMENTED** | N/A |
+
+## PART 7 — EXPLAINABILITY
+
+* **SHAP**: **NOT IMPLEMENTED** - No SHAP library usage or calculations found
+* **Shapley values**: **NOT IMPLEMENTED** - No Shapley value calculations found
+* **Feature importance**: **ACTUALLY CALCULATED**
+  * Source: `backend/train.py` lines 132-135, 332-334, 341-346, 183-214
+  * Method: Feature importances from tuned Random Forest classifier (GridSearchCV-selected)
+  * Processing:
+    * Raw importances from `model.feature_importances_` (length 13, zeros for non-selected features)
+    * Expanded to full 13-feature vector with zeros where features were not selected
+    * Nonzero indices correspond to selected features: `["thal", "thalach", "ca", "exang"]`
+    * Saved as JSON: `{"features": ["thal", "thalach", "ca", "exang"], "importance": [0.37267..., 0.25997..., 0.24594..., 0.12141...]}`
+  * Used by: Frontend `/feature_importance` endpoint → QML `ResultDisplay.qml` shows importance bars
+* **Permutation importance**: **NOT IMPLEMENTED** - No permutation importance calculations found
+* **Integrated gradients**: **NOT IMPLEMENTED** - Requires TensorFlow/PyTorch gradients; not used
+* **Quantum-specific explainability**: **NOT IMPLEMENTED** - No quantum attribution, sensitivity analysis, or quantum feature importance methods
+* **Any other explanation technique**: **NOT IMPLEMENTED** - Only Random Forest feature importance is implemented
+
+**Clear Distinction:**
+* **Actually calculated**: Random Forest feature importance on selected features (used in UI explainability)
+* **Hardcoded**: None - all values are computed during training
+* **Simulated**: None - actual model-derived values
+* **Not implemented**: SHAP, Shapley values, permutation importance, integrated gradients, quantum explainability
+
+## PART 8 — DATASETS
+
+1. **Cleveland Heart Disease Dataset**
+   * **Filename/location**: `data/heart.csv`
+   * **Purpose**: Primary dataset for training and evaluation (303 patients)
+   * **Number of rows**: 303
+   * **Number of columns**: 14 (13 features + 1 target)
+   * **Feature columns**: `["age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach", "exang", "oldpeak", "slope", "ca", "thal"]`
+   * **Target column**: `"target"` (0-4 scale where 0=no disease, 1-4=increasing severity)
+   * **Data types**: Mixed (integers and floats)
+   * **Train/test split**: 80/20 stratified split (242 train / 61 test) with `random_state=42`
+   * **Validation split**: Uses 5-fold cross-validation within training set for hyperparameter tuning
+   * **Preprocessing**:
+     * Missing value imputation with median
+     * StandardScaler normalization
+     * Supervised ANOVA feature selection (k=4)
+     * MinMaxScaler to [0, π] for quantum encoding
+   * **Used for**: Training all models, hyperparameter tuning, final evaluation, artifact generation
+
+2. **Combined Heart Disease Dataset**
+   * **Filename/location**: `data/heart_combined.csv`
+   * **Purpose**: Secondary dataset for scale validation (918 patients from all 4 UCI sources)
+   * **Number of rows**: 918
+   * **Number of columns**: 14 (same 13 features + target)
+   * **Feature columns**: Same 13 clinical features as Cleveland
+   * **Target column**: `"target"` (same 0-4 encoding)
+   * **Data types**: Same as Cleveland
+   * **Train/test split**: 80/20 stratified split (734 train / 184 test) with `random_state=42`
+   * **Validation split**: Same 5-fold CV on training set
+   * **Preprocessing**: Identical to Cleveland pipeline
+   * **Used for**: Scale validation experiments (`verify_combined.py`), not used for default training
+   * **External dataset expectation**: Yes - `data/build_combined.py` constructs this from raw UCI sources
+
+**External Dataset Expectations:**
+* The project expects external datasets at runtime only for:
+  * **Optional combined dataset build**: `python data/build_combined.py` downloads/processes raw UCI Heart Disease datasets
+  * **Extension experiments**: `eval_breast_cancer.py` and `eval_pima_diabetes.py` load other UCI datasets
+* **Core operation**: The backend only requires `data/heart.csv` (Cleveland) for normal operation
+* **Combined dataset**: Used only for validation experiments, not served by API unless explicitly pointed to it via code modification
+
+## PART 9 — MODEL EVALUATION
+
+**ACTUALLY CALCULATED FROM DATA** (via `backend/train.py` evaluation):
+
+| Model | Accuracy | ROC-AUC* | Precision | Recall | F1 | Notes |
+|-------|----------|----------|-----------|--------|----|-------|
+| Hybrid Quantum Committee (stacked) | 0.8525 | Not calculated | 0.8519 | 0.8214 | 0.8364 | Tied best on Cleveland |
+| SVM (tuned classical) | 0.8525 | Not calculated | 0.8519 | 0.8214 | 0.8364 | Tied best on Cleveland |
+| VQC Ensemble (quantum) | 0.8361 | Not calculated | 0.8214 | 0.8214 | 0.8214 |  |
+| Random Forest (tuned classical) | 0.8361 | Not calculated | 0.8214 | 0.8214 | 0.8214 |  |
+| Logistic Regression (tuned classical) | 0.8361 | Not calculated | 0.8214 | 0.8214 | 0.8214 |  |
+| Quantum Kernel SVM (pure quantum) | 0.7705 | Not calculated | 0.7500 | 0.7500 | 0.7500 | Flagship pure-quantum model |
+| VQC (pure quantum) | 0.7541 | Not calculated | 0.7407 | 0.7143 | 0.7273 |  |
+
+*ROC-AUC is not calculated anywhere in the codebase - only accuracy, precision, recall, F1, and confusion matrix are computed.
+
+**HARDCODED/DEMO RESULTS**: None found - all results in README/train output come from actual calculation
+
+**RESULTS MENTIONED IN DOCUMENTATION** (but verified as calculated):
+* All metrics in README.md tables match those printed by `train.py`
+* Combined dataset results in README (84.78% ExtraTrees) verified by `verify_combined.py`
+* No documentation-only results found - all claims backed by executable verification scripts
+
+**Clear Distinction:**
+* **ACTUALLY CALCULATED FROM DATA**: All metrics in tables above (from `train.py` evaluation on test sets)
+* **HARDCODED/DEMO RESULTS**: None present
+* **RESULTS MENTIONED IN DOCUMENTATION**: Same as actually calculated - documentation reflects real results
+
+**Additional Evaluation Details:**
+* **Confusion matrix**: Calculated for all models (available in results dictionaries)
+* **Classification report**: Generated via `classification_report()` but not stored/displayed
+* **Balanced Accuracy**: Not explicitly calculated (would be (sensitivity+specificity)/2)
+* **False Positive Rate**: Not calculated explicitly (would be 1-specificity)
+* **False Negative Rate**: Not calculated explicitly (would be 1-sensitivity)
+* **Other metrics**: Only accuracy, precision, recall, F1, and confusion matrix are computed
+
+## PART 10 — EXISTING QML FRONTEND
+
+### UI Structure
+
+* **Main screens**: Single window application with:
+  * **Left panel**: PatientForm (data entry)
+  * **Right panel**:
+    * Top: ResultDisplay (shows prediction after submit)
+    * Middle: Batch Score CSV... button
+    * Bottom: HistoryList (shows recent predictions)
+* **Components**:
+  * **PatientForm.qml**: Form with 13 input fields matching clinical features
+  * **ResultDisplay.qml**: Shows probability, risk level, recommendation, and feature importance bars
+  * **HistoryList.qml**: Simple list of recent predictions with timestamp, risk, probability
+* **Inputs**:
+  * Age (numeric), Sex (combobox: Female/Male), Chest pain type (combobox: 4 options)
+  * Resting BP (numeric), Cholesterol (numeric), Fasting blood sugar (combobox: False/True)
+  * Resting ECG (combobox: 3 options), Max heart rate (numeric), Exercise angina (combobox: No/Yes)
+  * ST depression (numeric), Slope (combobox: Upsloping/Flat/Downsloping)
+  * Number of vessels (combobox: 0-3), Thalassemia (combobox: Normal/Fixed Defect/Reversible Defect)
+* **Buttons**:
+  * "Predict Disease Risk" (triggers single prediction)
+  * "Batch Score CSV..." (opens file dialog for batch processing)
+* **Results displays**:
+  * Probability (numeric display)
+  * Risk level (text: Low/Moderate/High)
+  * Recommendation (text advice)
+  * Feature importance bars (horizontal bars showing relative importance)
+  * History list (timestamped entries)
+
+### Backend Communication
+
+* **Method**: Exclusive HTTP/XMLHttpRequest communication (no direct Python imports or shared state)
+* **Endpoints used**:
+  * `GET http://localhost:8000/health` - checks if backend is running
+  * `POST http://localhost:8000/predict` - single prediction (JSON payload)
+  * `POST http://localhost:8000/predict/csv` - batch prediction (multipart/form-data file upload)
+  * `GET http://localhost:8000/feature_importance` - fetches explainability data
+* **Communication pattern**:
+  * Frontend creates XMLHttpRequest objects
+  * Sets appropriate headers (Content-Type)
+  * Sends data (JSON.stringify for single, FormData for batch)
+  * Handles response in onreadystatechange callback
+  * Updates UI components based on response
+
+### Input/Output Mapping
+
+| QML Feature | Backend Function/Endpoint | Input | Output | Communication Method |
+| ----------- | ------------------------- | ----- | ------ | -------------------- |
+| PatientForm data entry (13 fields) | `/predict` | JSON object with 13 clinical features | Probability, risk, recommendation, threshold, model | POST JSON to `/predict` |
+| Batch CSV upload | `/predict/csv` | Multipart file upload with CSV containing 13 feature columns | Array of predictions (each with row, probability, risk, recommendation) | POST multipart/form-data to `/predict/csv` |
+| Feature importance display | `/feature_importance` | None | JSON: {features: [...], importance: [...]} | GET request |
+| Backend health check (implicit) | `/health` | None | JSON: {status, artifacts_loaded, model, threshold} | GET request |
+
+**Notable**: The QML frontend does NOT expose individual quantum model predictions - only the final committee probability is shown.
+
+## PART 11 — OLD QML FRONTEND VS ACTUAL BACKEND
+
+| Feature | Old QML UI Expects | Backend Actually Provides | Mismatch? |
+| ------- | ------------------ | ------------------------- | --------- |
+| Individual quantum model predictions (QSVM, VQC Ensemble, VQC) | UI shows explainability but no mechanism to select/model choice | Only final committee probability served; individual model predictions not exposed via API | **YES** - UI implies model choice but backend serves only ensemble |
+| Risk level calculation based on fixed thresholds (0.3/0.7) | UI code suggests Low/<0.3, Moderate/0.3-0.7, High/>0.7 | Backend uses dynamically tuned threshold with adaptive bands (0.6×threshold to 1.4×threshold) | **YES** - Hardcoded UI thresholds don't match backend's tuned threshold |
+| Feature importance from quantum methods | UI labels suggest "Quantum Shapley" or quantum explainability | Backend provides only classical Random Forest feature importance | **YES** - UI may imply quantum explainability but backend uses classical RF importance |
+| Batch processing progress indication | UI shows batch dialog during processing | Backend returns all results at once; no progress updates during batch scoring | **MINOR** - UI shows dialog but no real-time progress |
+| Model identification in results | UI may show which model was used | Backend returns generic model string ("hybrid-quantum-committee (stacked)" or "vqc") | **MINOR** - Limited model transparency |
+| Error handling for missing backend | UI shows generic error messages | Backend returns specific HTTP errors (503, 400) with descriptive messages | **NO** - Error communication works correctly |
+| Input validation ranges | UI combo boxes/text fields enforce some ranges | Backend uses Pydantic validation with specific ranges (age 0-120, etc.) | **NO** - Validation aligns (UI prevents invalid entry, backend validates) |
+| Probability display precision | UI shows raw probability value | Backend returns full float precision (no rounding in API) | **NO** - Precision handling is consistent |
+
+## PART 12 — REACT UI INTEGRATION REQUIREMENTS
+
+| React Requirement | Backend Capability | Available? | Existing Interface? | Changes Needed |
+| ----------------- | ------------------ | ---------- | ------------------- | -------------- |
+| Single patient prediction | `/predict` endpoint | ✅ Yes | ✅ Yes (POST JSON) | None - can reuse existing endpoint |
+| Batch CSV processing | `/predict/csv` endpoint | ✅ Yes | ✅ Yes (POST multipart) | None - can reuse existing endpoint |
+| Feature importance for explainability | `/feature_importance` endpoint | ✅ Yes | ✅ Yes (GET) | None - can reuse existing endpoint |
+| Backend health/status check | `/health` endpoint | ✅ Yes | ✅ Yes (GET) | None - can reuse existing endpoint |
+| Dynamic threshold information | Included in `/predict` and `/health` responses | ✅ Yes | ✅ Yes (threshold field) | None - threshold already exposed |
+| Risk level calculation (Low/Moderate/High) | Done in backend; returned in responses | ✅ Yes | ✅ Yes (risk field) | None - already provided |
+| Clinical recommendations | Done in backend; returned in responses | ✅ Yes | ✅ Yes (recommendation field) | None - already provided |
+| Model identification/transparency | Basic model name in responses | ✅ Yes (limited) | ✅ Yes (model field) | **Optional** - Could enhance to show individual member contributions |
+| Real-time batch progress | Not provided by backend | ❌ No | ❌ No | **Required** - Would need new endpoint or WebSocket for progress updates |
+| Individual quantum model predictions | Not exposed via API | ❌ No | ❌ No | **Required** - Would need new endpoints for each model type |
+| Quantum explainability methods | Not implemented in backend | ❌ No | ❌ No | **Required** - Would need to implement quantum attribution/shapley values |
+| Input validation feedback | Backend returns 400 errors with details | ✅ Yes | ✅ Yes (error responses) | None - error messages already descriptive |
+| CORS headers for cross-origin requests | Backend configured with `allow_origins=["*"]` | ✅ Yes | ✅ Yes (CORS middleware) | None - already allows any origin |
+| JSON serialization of numpy/PennyLane objects | Backend handles serialization internally | ✅ Yes | ✅ Yes (responses are JSON) | None - API already returns standard JSON types |
+
+## PART 13 — RUNTIME & DEPENDENCIES
+
+* **Python version**: 3.9 - 3.12 (as per README; no wheels for 3.13+ in pinned deps)
+* **requirements.txt**:
+  * `fastapi==0.104.1`
+  * `uvicorn[standard]==0.24.0`
+  * `pennylane==0.33.1`
+  * `scikit-learn==1.3.2`
+  * `pandas==2.1.3`
+  * `numpy==1.26.1`
+  * `matplotlib==3.8.2`
+  * `httpx==0.25.2` (test only)
+  * `python-multipart==0.0.6` (CSV upload)
+  * `PyQt5==5.15.9` (QML frontend)
+* **requirements-lock.txt**: Fully pinned transitive dependencies for bit-for-bit reproducibility
+* **FastAPI version**: 0.104.1
+* **scikit-learn version**: 1.3.2
+* **PennyLane version**: 0.33.1
+* **NumPy version**: 1.26.1
+* **Pandas version**: 2.1.3
+
+* **CPU/GPU requirements**: CPU-only (uses `default.qubit` simulator; no GPU/CUDA dependencies)
+* **Model files**: Located in `backend/artifacts/` (all `.pkl` files)
+* **Dataset files**:
+  * Required: `data/heart.csv` (Cleveland)
+  * Optional: `data/heart_combined.csv` (for validation experiments)
+* **Environment variables**: None used in core backend operation
+* **API keys/secrets**: None required
+* **External services**: None - fully self-contained
+* **Local paths**:
+  * Artifact paths relative to `__file__` in `backend/app.py`
+  * Data paths relative to project root
+* **OS-specific assumptions**:
+  * Windows path handling in `frontend/run_ui.py` (uses `venv\Scripts\activate`)
+  * Otherwise OS-independent (uses standard Python/Python packaging)
+
+**Likely Integration Problems**:
+* **Relative-path problems**: None - all paths are `__file__`-relative or use configured directories
+* **CORS problems**: None - explicitly allows all origins
+* **Serialization problems**: None - API returns only standard JSON types (float, string, int, bool, arrays)
+* **NumPy/PennyLane objects**: Properly serialized via `.tolist()` or explicit conversion before JSON response
+* **Dependency conflicts**: None apparent - all packages are pinned and tested together
+* **Missing model files**: Will cause 503 error if `train.py` not run first (clear error message)
+* **Missing datasets**: Will cause error during `train.py` execution if `data/heart.csv` missing
+* **Environment-specific behavior**: None - should run identically on Windows/Linux/Mac with proper Python
+
+## PART 14 — BACKEND INTEGRATION RISKS
+
+* **BLOCKING**:
+  * **Missing API endpoints for individual model predictions**: If React needs to show/explain individual quantum model contributions, backend does not expose these
+  * **Missing quantum explainability**: If React expects quantum-specific attribution (e.g., quantum Shapley values), backend only provides classical RF importance
+
+* **IMPORTANT**:
+  * **Hardcoded feature selection**: Backend always selects exactly 4 features via ANOVA; React cannot change this without modifying preprocessing
+  * **Fixed quantum circuit architecture**: Number of qubits (4), layers (4), and ansatz are hardcoded; changes require code modification
+  * **Threshold calculation method**: Uses Youden's J on OOF predictions; React cannot influence this without retraining
+
+* **MINOR**:
+  * **Batch processing lacks progress feedback**: Long batch jobs show no intermediate progress to UI
+  * **Limited model transparency**: API returns only "hybrid-quantum-committee (stacked)" or "vqc" without detail on member weights/contributions
+  * **Single threshold for risk bands**: Uses fixed multipliers (0.6× and 1.4×) of threshold; cannot customize band widths per use case
+  * **CPU-only inference**: No GPU acceleration option for quantum simulations (may be slow for large batches)
+
+## PART 15 — FINAL BACKEND ARCHITECTURE
+
+```
+React UI (Future)
+    ↓
+HTTP/JSON (REST API)
+    ↓
+FastAPI Application (backend/app.py)
+    ↓
+CORS Middleware (allows cross-origin)
+    ↓
+Lifespan Context Manager (startup/shutdown)
+    ↓
+Artifact Loading:
+    ├── Preprocessor (backend/artifacts/preprocessor.pkl)
+    ├── Committee Artifacts:
+    │   ├── Quantum Kernel SVM (backend/artifacts/qkernel_model.pkl)
+    │   ├── VQC Ensemble (backend/artifacts/ensemble_model.pkl)
+    │   ├── Standalone VQC (backend/artifacts/vqc_model.pkl)
+    │   ├── Classical SVM (backend/artifacts/classical_members.pkl)
+    │   ├── Classical Logistic Regression (backend/artifacts/classical_members.pkl)
+    │   └── Meta-learner (LogisticRegressionStub from committee.pkl)
+    └── Feature Importance (backend/artifacts/feature_importance.json)
+    ↓
+Input Validation (Pydantic PatientData model)
+    ↓
+Preprocessing Pipeline:
+    ├── Median Imputation
+    ├── Standard Scaling
+    ├── ANOVA Feature Selection (k=4 → ["thal", "thalach", "ca", "exang"])
+    └── MinMaxScaling to [0, π]
+    ↓
+Quantum/Classical Inference:
+    ├── If committee available:
+    │   ├── Get probabilities from all 5 members
+    │   ├── Stack as [p_qkernel, p_ensemble, p_vqc, p_svm, p_lr]
+    │   └── Apply meta-learner LogisticRegression
+    └── Fallback to standalone VQC
+    ↓
+Post-processing:
+    ├── Apply tuned threshold (from committee.pkl)
+    ├── Calculate risk level (Low/Moderate/High via _risk_bands)
+    └── Generate clinical recommendation (_recommendation)
+    ↓
+JSON Response:
+    ├── probability (float)
+    ├── risk (string)
+    ├── recommendation (string)
+    ├── threshold (float)
+    └── model (string identifier)
+    ↓
+React UI (Future)
+```
+
+**Current QML Frontend Fit**:
+```
+Current QML Frontend
+    ↓
+HTTP/JSON (same as above)
+    ↓
+[Identical backend architecture as shown above]
+```
+
+## PART 16 — FINAL SUMMARY
+
+### A. What is actually implemented?
+
+* **Complete FastAPI backend** with proper startup/shutdown lifecycle
+* **Two prediction endpoints**:
+  * `/predict` for single patient (JSON)
+  * `/predict/csv` for batch scoring (CSV upload)
+* **Health check and feature importance endpoints**
+* **Hybrid quantum-classical committee** serving as primary model:
+  * Quantum Kernel SVM (projective fidelity kernel)
+  * Bagged VQC ensemble (5 members)
+  * Standalone VQC (data re-uploading, 4 qubits, 4 layers)
+  * Tuned classical SVM (RBF kernel)
+  * Tuned classical Logistic Regression
+* **Out-of-fold stacked meta-learner** (Logistic Regression) combining member predictions
+* **Automated threshold tuning** via Youden's J on OOF predictions (no test leakage)
+* **Explainability via classical Random Forest feature importance** on selected features
+* **Complete preprocessing pipeline**: impute, scale, select top 4 features, angle scale to [0, π]
+* **Input validation** via Pydantic models with physiological ranges
+* **Risk stratification** into Low/Moderate/High using adaptive bands around tuned threshold
+* **Clinical recommendations** based on risk level
+* **CORS middleware** enabling cross-origin requests (for frontend)
+* **Proper error handling** with descriptive messages and HTTP status codes
+
+### B. What is currently mocked/hardcoded?
+
+* **None of the core functionality is mocked** - all quantum and classical models compute actual predictions
+* **Hardcoded aspects** (configuration, not functionality):
+  * Number of qubits: 4
+  * Number of layers: 4 (VQC), 2 (Quantum Kernel)
+  * Feature selection: k=4 via ANOVA (supervised)
+  * Quantum device: `default.qubit` (CPU simulator)
+  * Optimizer: Adam with cosine annealing
+  * Loss function: MSE on ±1 targets
+  * Training epochs: 120
+  * Default hyperparameters (learning rate 0.15, L2 0.003, etc.)
+  * Risk band multipliers: 0.6× and 1.4× of threshold
+  * Feature names and order: fixed as per Cleveland dataset
+* **No mock predictions, simulated execution, or placeholder values** in the serving pipeline
+
+### C. What does the old QML frontend reveal?
+
+* **Communication pattern**: Pure HTTP/XMLHttpRequest to FastAPI endpoints (ideal for React replacement)
+* **Required endpoints**: `/predict`, `/predict/csv`, `/feature_importance`, `/health` (all present and functional)
+* **Input format**: 13 clinical features with specific encoding (sex: 0/1, cp: 1-4 encoded as combobox index+1, etc.)
+* **Output expectations**: probability, risk level, recommendation, plus feature importance for UI bars
+* **Error handling expectation**: descriptive messages for backend/service issues
+* **Health check pattern**: frontend verifies backend availability before making prediction requests
+* **Batch processing workflow**: file upload → multipart response → results display
+* **UI component mapping**:
+  * Form → `/predict` endpoint
+  * File upload → `/predict/csv` endpoint
+  * Explainability panel → `/feature_importance` endpoint
+  * Initial load → `/health` + `/feature_importance` calls
+
+### D. What can the React UI use immediately?
+
+* **All current backend endpoints** require zero changes for React integration:
+  * Single prediction: POST JSON to `/predict` → get probability/risk/recommendation
+  * Batch processing: POST CSV file to `/predict/csv` → get array of row results
+  * Explainability: GET `/feature_importance` → get features/importance arrays for charts/chips
+  * Status check: GET `/health` → verify backend readiness
+* **Response format** is already React-friendly JSON with standard types
+* **CORS** already configured to allow any origin (including localhost:3000 for React dev)
+* **Error responses** already provide descriptive messages for UI display
+* **Threshold and model information** already included in responses for UI transparency
+
+### E. What needs backend work before React integration?
+
+* **None required for basic feature parity** - existing endpoints provide all data the QML UI uses
+* **Optional enhancements** (not blocking):
+  * Add individual quantum model prediction endpoints (if React wants to show/model comparison)
+  * Implement quantum explainability methods (if React wants quantum-specific attribution)
+  * Add WebSocket/progress endpoint for real-time batch feedback
+  * Allow configurable feature selection or quantum hyperparameters via API
+  * Enhance model transparency in responses (show member weights/contributions)
+  * Add customizable risk band parameters (instead of fixed 0.6×/1.4× multipliers)
+
+### F. What should NOT be carried over from the old QML frontend
+
+* **Hardcoded risk thresholds** (0.30/0.70) - backend uses dynamically tuned threshold with adaptive bands
+* **Assumption of quantum explainability** - backend only provides classical RF importance; UI should not imply quantum-specific attribution unless implemented
+* **Model selection UI** - backend serves only the committee probability; no API to choose between individual models
+* **Fixed probability display precision** - backend returns full precision; UI should handle formatting
+* **Implicit batch progress** - backend returns complete results; UI should not fake progress during processing
+
+### G. Proposed integration sequence
+
+1. **Verification Phase** (no changes):
+   * Confirm backend runs correctly with `python backend/train.py` followed by `uvicorn backend.app:app`
+   * Validate all endpoints return expected format using curl or Postman
+   * Verify CORS headers allow cross-origin requests from localhost:3000
+
+2. **React Project Setup**:
+   * Create React application (create-react-app or Vite)
+   * Configure proxy to backend API or set up full CORS communication
+   * Install required dependencies (axios for HTTP, charting library for explainability)
+
+3. **Component Mapping**:
+   * Replace PatientForm.qml with React form component (13 fields with same validation/encoding)
+   * Replace ResultDisplay.qml with React component showing probability/risk/recommendation/feature importance
+   * Replace HistoryList.qml with React list component showing prediction history
+   * Replace batch CSV functionality with React file upload to `/predict/csv`
+   * Replace health check with React GET to `/health` on app load
+
+4. **State Management**:
+   * Implement state for form inputs, prediction results, loading states, history
+   * Handle asynchronous API calls with loading/error states
+   * Store feature importance data for explainability visualization
+
+5. **Styling and UX**:
+   * Match or improve upon QML UI styling and layout
+   * Implement responsive design for different screen sizes
+   * Add form validation feedback matching backend Pydantic constraints
+   * Implement feature importance visualization (bar chart, chips, etc.)
+
+6. **Testing and Validation**:
+   * Test single prediction with known good/bad inputs
+   * Test batch processing with various CSV formats
+   * Verify explainability display matches backend feature importance
+   * Confirm error handling works for missing backend, invalid inputs, etc.
+   * Validate performance and responsiveness
+
+7. **Deployment Preparation**:
+   * Configure production build process for React
+   * Set up environment variables for backend URL (if different in prod)
+   * Verify CORS settings appropriate for production domains
+   * Plan for backend deployment (separate service or same origin)
+
+**Note**: This sequence assumes reuse of all existing backend endpoints. No backend modifications are required for feature-parity replacement of the QML frontend.

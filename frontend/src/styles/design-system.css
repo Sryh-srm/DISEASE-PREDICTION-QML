@@ -1,0 +1,306 @@
+/* ==========================================================================
+   HYBRID QUANTUM MACHINE LEARNING PLATFORM // DESIGN SYSTEM TOKENS
+   Research Lab + Medical Physics + Deep Obsidian Minimalist Aesthetic
+   ========================================================================== */
+
+:root {
+  /* Color Palette: Void, Obsidian, Carbon */
+  --bg-void: #050608;
+  --bg-deep: #080a0f;
+  --bg-surface: #0d1017;
+  --bg-surface-elevated: #131823;
+  --bg-surface-glass: rgba(13, 16, 23, 0.72);
+  --bg-overlay: rgba(5, 6, 8, 0.85);
+
+  /* Borders & Thin Lines */
+  --border-hairline: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-medium: rgba(255, 255, 255, 0.18);
+  --border-cyan: rgba(0, 240, 255, 0.28);
+  --border-emerald: rgba(0, 229, 163, 0.28);
+
+  /* Typography Colors */
+  --text-pure: #ffffff;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-dim: #475569;
+
+  /* Quantum Accents (Scientific, calibrated, non-saturated) */
+  --quantum-cyan: #00f0ff;
+  --quantum-cyan-dim: rgba(0, 240, 255, 0.12);
+  --quantum-cyan-glow: rgba(0, 240, 255, 0.22);
+  --quantum-emerald: #00e5a3;
+  --quantum-emerald-dim: rgba(0, 229, 163, 0.12);
+  --quantum-violet: #8b5cf6;
+  --quantum-violet-dim: rgba(139, 92, 246, 0.12);
+  --quantum-amber: #f59e0b;
+  --quantum-rose: #f43f5e;
+
+  /* Fonts */
+  --font-display: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  /* Spacing */
+  --container-max: 1380px;
+  --container-pad: clamp(1.25rem, 4vw, 3.5rem);
+  --section-pad-y: clamp(5rem, 10vw, 9.5rem);
+
+  /* Transitions */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 500ms;
+}
+
+/* Document & Base Setup */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+  background-color: var(--bg-void);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  overflow-x: hidden;
+  background-color: var(--bg-void);
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-void);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--quantum-cyan);
+}
+
+/* Grid & Lab Pattern Background */
+.lab-grid-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
+  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
+  opacity: 0.8;
+}
+
+/* Global Typography Utilities */
+h1, h2, h3, h4, .display-font {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-pure);
+  line-height: 1.1;
+}
+
+p {
+  color: var(--text-secondary);
+  font-weight: 400;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+}
+
+/* Scientific Badge */
+.science-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  backdrop-filter: blur(8px);
+}
+
+.science-tag.cyan {
+  border-color: var(--border-cyan);
+  color: var(--quantum-cyan);
+  background: var(--quantum-cyan-dim);
+}
+
+.science-tag.emerald {
+  border-color: var(--border-emerald);
+  color: var(--quantum-emerald);
+  background: var(--quantum-emerald-dim);
+}
+
+.tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  animation: pulse-subtle 2.5s infinite ease-in-out;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* Common Container Layouts */
+.section-wrapper {
+  position: relative;
+  z-index: 1;
+  padding: var(--section-pad-y) var(--container-pad);
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+.section-header {
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.section-eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--quantum-cyan);
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  line-height: 1.05;
+  margin-bottom: 1.25rem;
+  max-width: 900px;
+}
+
+.section-subtitle {
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  color: var(--text-secondary);
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+/* Thin Border Research Card */
+.research-card {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 4px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  transition: border-color var(--duration-normal) var(--ease-out),
+              background var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out);
+  overflow: hidden;
+}
+
+.research-card:hover {
+  border-color: var(--border-medium);
+  background: var(--bg-surface-elevated);
+}
+
+/* Buttons */
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.95rem 1.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--duration-normal) var(--ease-out);
+  position: relative;
+  border: none;
+}
+
+.cta-button.primary {
+  background: var(--text-pure);
+  color: var(--bg-void);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.12);
+}
+
+.cta-button.primary:hover {
+  background: var(--quantum-cyan);
+  color: var(--bg-void);
+  box-shadow: 0 6px 25px rgba(0, 240, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.cta-button.secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.cta-button.secondary:hover {
+  border-color: var(--text-pure);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-pure);
+  transform: translateY(-1px);
+}
+
+.cta-button.quantum {
+  background: var(--quantum-cyan-dim);
+  color: var(--quantum-cyan);
+  border: 1px solid var(--border-cyan);
+}
+
+.cta-button.quantum:hover {
+  background: var(--quantum-cyan);
+  color: var(--bg-void);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

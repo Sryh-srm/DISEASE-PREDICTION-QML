@@ -1,0 +1,207 @@
+/* ==========================================================================
+   PROBLEM SECTION STYLES // EDITORIAL COMPLEXITY BOTTLENECK
+   ========================================================================== */
+
+.problem-section {
+  position: relative;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.problem-headline {
+  font-size: clamp(3rem, 7.5vw, 6rem);
+  letter-spacing: -0.04em;
+}
+
+.problem-statement {
+  font-size: clamp(1.2rem, 2.2vw, 1.65rem);
+  line-height: 1.5;
+  color: var(--text-primary);
+  max-width: 880px;
+  margin-top: 1rem;
+}
+
+.problem-narrative-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  margin-top: 4rem;
+  align-items: start;
+}
+
+.narrative-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.narrative-subheading {
+  font-size: 1.4rem;
+  line-height: 1.3;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.narrative-body {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+
+.bottleneck-stat-box {
+  margin-top: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: 1.5rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.stat-label {
+  color: var(--text-muted);
+}
+
+.stat-val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.stat-val.highlight {
+  color: var(--quantum-cyan);
+}
+
+/* Modality Browser */
+.modality-complexity-browser {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: 2px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.browser-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.modality-pill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin-bottom: 1.5rem;
+}
+
+.modality-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.85rem 1rem;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--duration-fast) ease;
+}
+
+.modality-btn:hover {
+  border-color: var(--border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.modality-btn.is-selected {
+  border-color: var(--border-cyan);
+  background: var(--quantum-cyan-dim);
+}
+
+.mod-btn-tag {
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.modality-btn.is-selected .mod-btn-tag {
+  color: var(--quantum-cyan);
+}
+
+.mod-btn-name {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Detail Display */
+.modality-detail-display {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  padding: 1.5rem;
+  border-radius: 2px;
+}
+
+.detail-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  margin-bottom: 0.75rem;
+}
+
+.dim-spec {
+  color: var(--quantum-cyan);
+}
+
+.status-spec {
+  color: var(--quantum-rose);
+}
+
+.detail-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.detail-problem {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.detail-footer {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-hairline);
+  padding-top: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .problem-narrative-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modality-pill-grid {
+    grid-template-columns: 1fr;
+  }
+}

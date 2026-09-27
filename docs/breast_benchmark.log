@@ -1,0 +1,82 @@
+
+======================================================================
+BREAST CANCER WISCONSIN — LEAKAGE-FREE BENCHMARK  569x30 (sklearn)
+======================================================================
+Loaded sklearn.datasets.load_breast_cancer: X (569, 30), y (569,)
+Features (30): ['mean radius', 'mean texture', 'mean perimeter', 'mean area', 'mean smoothness', 'mean compactness', 'mean concavity', 'mean concave points', 'mean symmetry', 'mean fractal dimension', 'radius error', 'texture error', 'perimeter error', 'area error', 'smoothness error', 'compactness error', 'concavity error', 'concave points error', 'symmetry error', 'fractal dimension error', 'worst radius', 'worst texture', 'worst perimeter', 'worst area', 'worst smoothness', 'worst compactness', 'worst concavity', 'worst concave points', 'worst symmetry', 'worst fractal dimension']
+Target distribution: {1: 357, 0: 212}  (0=malignant, 1=benign)
+NA total 0  Missing per col: {'mean radius': 0, 'mean texture': 0, 'mean perimeter': 0, 'mean area': 0, 'mean smoothness': 0, 'mean compactness': 0, 'mean concavity': 0, 'mean concave points': 0, 'mean symmetry': 0, 'mean fractal dimension': 0, 'radius error': 0, 'texture error': 0, 'perimeter error': 0, 'area error': 0, 'smoothness error': 0, 'compactness error': 0, 'concavity error': 0, 'concave points error': 0, 'symmetry error': 0, 'fractal dimension error': 0, 'worst radius': 0, 'worst texture': 0, 'worst perimeter': 0, 'worst area': 0, 'worst smoothness': 0, 'worst compactness': 0, 'worst concavity': 0, 'worst concave points': 0, 'worst symmetry': 0, 'worst fractal dimension': 0}
+Duplicate rows in X: 0
+
+Official split (FROZEN, TEST SEALED): train 455 / test 114  random_state=42 stratify
+  train class {1: 285, 0: 170}  test class {1: 72, 0: 42}
+  verified 455/114 split
+
+======================================================================
+STATIC AUDIT — leakage vectors
+======================================================================
+ - Preprocessor fit: ON TRAIN ONLY (pipe.fit(Xtr,yt)), test only transform
+ - Model tuning: GridSearchCV cv=5 on TRAIN ONLY (StratifiedKFold shuffle random_state=42)
+ - Stacking OOF: 5-fold on TRAIN ONLY, threshold tuned on OOF predictions only
+ - Test usage: EXACTLY ONCE at final evaluation per k (single accuracy_score calls)
+ - Dataset: 569 real Wisconsin patients (sklearn), no synthetic, no leakage
+ - Pipelines:
+     k=4  (quantum branch, 4q): imputer(median) + StandardScaler + SelectKBest(k=4 ANOVA f_classif) + MinMaxScaler(0, pi)
+     k=30 (classical fallback, all 30): imputer(median) + StandardScaler + MinMaxScaler(0, pi)  [no selection]
+
+======================================================================
+k=4  ANOVA top-4 (quantum branch, 4q)
+======================================================================
+ selected ['mean concave points', 'worst radius', 'worst perimeter', 'worst concave points']  A (455, 4) B (114, 4)
+   - mean concave points             F=703.36  p=3.14e-94
+   - worst radius                    F=687.43  p=7.30e-93
+   - worst perimeter                 F=719.60  p=1.33e-95
+   - worst concave points            F=795.22  p=9.27e-102
+  SVM     CV 0.9451  TEST 0.9474  ROC 0.9907  {'C': 0.5, 'gamma': 0.5}
+  LR      CV 0.9429  TEST 0.9474  ROC 0.9897  {'C': 0.1}
+  RF      CV 0.9385  TEST 0.9211  ROC 0.9851  {'max_depth': None, 'min_samples_split': 5, 'n_estimators': 500}
+  ET      CV 0.9451  TEST 0.9386  ROC 0.9891  {'max_depth': 6, 'n_estimators': 500}
+  HGB     CV 0.9407  TEST 0.9386  ROC 0.9868  {'learning_rate': 0.05, 'max_iter': 200}
+  KNN     CV 0.9473  TEST 0.9386  ROC 0.9788  {'n_neighbors': 7}
+  >> best single TEST 0.9474 (SVM)  (classical max k=4)  108/114
+    + lr    OOF-acc 0.9538 @ 0.655
+  greedy OOF committee: ['lr']  OOF-acc 0.9538 thr 0.655
+  STACKED TEST @OOF-thr (headline, leakage-free) 0.655: acc 0.9298  F1 0.9429 prec 0.9706 rec 0.9167 ROC 0.9897  CM TN FP FN TP [40, 2, 6, 66]  (106/114)
+  STACKED TEST @0.5 0.500: acc 0.9386  F1 0.9524 prec 0.9333 rec 0.9722 ROC 0.9897  CM TN FP FN TP [37, 5, 2, 70]  (107/114)
+  ORACLE test-thr LEAKAGE ceiling (not reported as headline): 0.9474 @ 0.180 — would be leakage if tuned on test
+
+======================================================================
+k=30  all 30 (no selection, classical fallback)
+======================================================================
+ no selection, A (455, 30) B (114, 30)
+  SVM     CV 0.9780  TEST 0.9825  ROC 0.9957  {'C': 1, 'gamma': 'scale'}
+  LR      CV 0.9802  TEST 0.9737  ROC 0.9950  {'C': 0.5}
+  RF      CV 0.9648  TEST 0.9474  ROC 0.9937  {'max_depth': None, 'min_samples_split': 2, 'n_estimators': 300}
+  ET      CV 0.9736  TEST 0.9561  ROC 0.9932  {'max_depth': None, 'n_estimators': 300}
+  HGB     CV 0.9692  TEST 0.9737  ROC 0.9924  {'learning_rate': 0.05, 'max_iter': 200}
+  KNN     CV 0.9736  TEST 0.9737  ROC 0.9884  {'n_neighbors': 11}
+  >> best single TEST 0.9825 (SVM)  (classical max k=30)  112/114
+    + lr    OOF-acc 0.9802 @ 0.440
+  greedy OOF committee: ['lr']  OOF-acc 0.9802 thr 0.440
+  STACKED TEST @OOF-thr (headline, leakage-free) 0.440: acc 0.9737  F1 0.9793 prec 0.9726 rec 0.9861 ROC 0.9950  CM TN FP FN TP [40, 2, 1, 71]  (111/114)
+  STACKED TEST @0.5 0.500: acc 0.9737  F1 0.9793 prec 0.9726 rec 0.9861 ROC 0.9950  CM TN FP FN TP [40, 2, 1, 71]  (111/114)
+  ORACLE test-thr LEAKAGE ceiling (not reported as headline): 0.9737 @ 0.265 — would be leakage if tuned on test
+
+======================================================================
+CANARIES — shuffled labels must stay at chance (no memorization)
+======================================================================
+  SVM  on shuffled labels (train): 0.6352  PASS ~chance
+  LR   on shuffled labels (train): 0.6198  PASS ~chance
+  RF   on shuffled labels (train): 1.0000  FAIL memorizes
+
+======================================================================
+SUMMARY — Breast Cancer Wisconsin 569x30, leakage-free
+======================================================================
+ k= 4  best single 0.9474 (SVM)  stacked OOF committee ['lr']  OOF-acc 0.9538 thr 0.655  ROC 0.9897
+ k=30  best single 0.9825 (SVM)  stacked OOF committee ['lr']  OOF-acc 0.9802 thr 0.440  ROC 0.9950
+ All thresholds from OOF train folds only; test touched once per k; preprocessor fit on train only.
+ Pipeline k=4: imputer+StandardScaler+SelectKBest(k=4 ANOVA)+MinMaxScaler(0,pi)  (quantum branch)
+ Pipeline k=30: imputer+StandardScaler+MinMaxScaler(0,pi)  (classical fallback, all 30)
+ Split: 80/20 stratified random_state=42  455 train / 114 test  (569 total)
+ Run: ./venv/Scripts/python.exe scripts/eval_breast_cancer.py
+ Log: docs/breast_benchmark.log

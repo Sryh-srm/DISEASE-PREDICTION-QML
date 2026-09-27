@@ -1,0 +1,426 @@
+/* ==========================================================================
+   QUANTUM VISUALIZATION STYLES // BLOCH SPHERE & CIRCUIT WORKBENCH
+   ========================================================================== */
+
+.quantum-vis-section {
+  position: relative;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.preset-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.preset-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.preset-btn-group {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: 0.55rem 1rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.preset-btn:hover {
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.preset-btn.is-active {
+  border-color: var(--border-cyan);
+  background: var(--quantum-cyan-dim);
+  color: var(--quantum-cyan);
+}
+
+/* Workbench Grid */
+.quantum-workbench-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 1.75rem;
+  align-items: stretch;
+  margin-bottom: 3.5rem;
+}
+
+.bloch-workbench-card,
+.circuit-workbench-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-hud-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-hairline);
+  margin-bottom: 1rem;
+}
+
+.hud-drag-hint {
+  color: var(--quantum-cyan);
+}
+
+/* Canvas container */
+.bloch-canvas-container {
+  width: 100%;
+  height: 360px;
+  background: #060709;
+  border: 1px solid var(--border-hairline);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.bloch-canvas-container:active {
+  cursor: grabbing;
+}
+
+.bloch-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Bloch Telemetry Panel */
+.bloch-telemetry-panel {
+  margin-top: 1.25rem;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  padding: 1rem 1.25rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.angle-readout {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+}
+
+.angle-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.angle-col .lbl {
+  color: var(--text-muted);
+}
+
+.angle-col .val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.prob-meter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.meter-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.meter-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  transition: width 0.2s ease-out;
+}
+
+.fill-cyan {
+  background: var(--quantum-cyan);
+  box-shadow: 0 0 8px var(--quantum-cyan);
+}
+
+.fill-emerald {
+  background: var(--quantum-emerald);
+  box-shadow: 0 0 8px var(--quantum-emerald);
+}
+
+/* Sliders Cluster */
+.sliders-cluster {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.vector-slider-item {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  padding: 0.75rem 1rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.slider-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+}
+
+.feature-code {
+  color: var(--text-muted);
+}
+
+.feature-val {
+  color: var(--quantum-cyan);
+  font-weight: 600;
+}
+
+.quantum-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+  border-radius: 1px;
+}
+
+.quantum-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--quantum-cyan);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--quantum-cyan);
+}
+
+/* Circuit Board */
+.circuit-diagram-container {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  padding: 1.25rem;
+  border-radius: 2px;
+  margin-top: auto;
+}
+
+.circuit-title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  margin-bottom: 1.25rem;
+  color: var(--text-muted);
+}
+
+.circuit-step-badge {
+  color: var(--quantum-cyan);
+}
+
+.circuit-board {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 0.5rem 0;
+}
+
+.qubit-wire {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.wire-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.wire-line {
+  position: relative;
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+}
+
+.gate-box {
+  width: 32px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  z-index: 2;
+}
+
+.gate-h {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.gate-rz {
+  border-color: var(--border-cyan);
+  color: var(--quantum-cyan);
+  background: var(--quantum-cyan-dim);
+  font-size: 0.58rem;
+  width: 42px;
+}
+
+.gate-ry {
+  border-color: rgba(139, 92, 246, 0.4);
+  color: var(--quantum-violet);
+  background: var(--quantum-violet-dim);
+  font-size: 0.58rem;
+  width: 42px;
+}
+
+.gate-cnot-ctrl {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--quantum-cyan);
+  z-index: 2;
+  box-shadow: 0 0 6px var(--quantum-cyan);
+}
+
+.gate-cnot-target {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--quantum-cyan);
+  background: var(--bg-surface);
+  position: relative;
+  z-index: 2;
+}
+
+.gate-m {
+  border-color: var(--border-emerald);
+  color: var(--quantum-emerald);
+  background: var(--quantum-emerald-dim);
+}
+
+.circuit-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 1.25rem;
+  line-height: 1.5;
+}
+
+/* Supplementary Strip */
+.manifold-scientific-strip {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 2.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: 1.5rem;
+  border-radius: 2px;
+  align-items: center;
+}
+
+.strip-image-col {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #060709;
+  border-radius: 2px;
+}
+
+.strip-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.strip-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.strip-title {
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.strip-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.strip-meta {
+  display: flex;
+  gap: 2rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .quantum-workbench-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manifold-scientific-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .sliders-cluster {
+    grid-template-columns: 1fr;
+  }
+}

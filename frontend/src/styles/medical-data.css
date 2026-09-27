@@ -1,0 +1,203 @@
+/* ==========================================================================
+   MEDICAL DATA SECTION STYLES // CLINICAL RESEARCH MODULE CARDS
+   ========================================================================== */
+
+.medical-data-section {
+  position: relative;
+  background: var(--bg-void);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.medical-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.5rem;
+  margin-top: 3.5rem;
+}
+
+.medical-research-module {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: clamp(1.75rem, 3vw, 2.25rem);
+  border-radius: 2px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.medical-research-module:hover {
+  border-color: var(--border-cyan);
+  background: var(--bg-surface-elevated);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.module-top-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  font-size: 0.7rem;
+}
+
+.mod-icon-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mod-emoji {
+  font-size: 1.25rem;
+}
+
+.mod-id {
+  color: var(--quantum-cyan);
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.mod-dim {
+  color: var(--text-muted);
+}
+
+/* Main info */
+.module-main-info {
+  margin-bottom: 1.5rem;
+}
+
+.module-title {
+  font-size: 1.45rem;
+  margin-bottom: 0.65rem;
+  line-height: 1.2;
+}
+
+.mod-target-row,
+.mod-modality-row {
+  display: flex;
+  font-size: 0.72rem;
+  margin-bottom: 0.35rem;
+  gap: 0.5rem;
+  line-height: 1.5;
+}
+
+.target-lbl,
+.mod-lbl {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.target-val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.mod-val {
+  color: var(--text-secondary);
+}
+
+/* Quantum Mechanism */
+.module-quantum-mechanism {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  padding: 1.1rem;
+  border-radius: 2px;
+  margin-bottom: 1.5rem;
+}
+
+.mechanism-eyebrow {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--quantum-cyan);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.45rem;
+}
+
+.mechanism-text {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* Features */
+.module-features-list {
+  margin-bottom: 1.75rem;
+}
+
+.features-head {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.6rem;
+}
+
+.features-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.feature-pill {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  border-radius: 2px;
+}
+
+/* Benchmark Footer */
+.module-benchmark-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--border-hairline);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+}
+
+.benchmark-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.perf-label {
+  color: var(--text-muted);
+}
+
+.perf-val {
+  color: var(--quantum-emerald);
+  line-height: 1.45;
+}
+
+.benchmark-dataset {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+}
+
+/* Reticles */
+.card-reticle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--quantum-cyan);
+  border-style: solid;
+  opacity: 0;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.medical-research-module:hover .card-reticle {
+  opacity: 0.75;
+}
+
+.card-reticle.top-left { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
+.card-reticle.bottom-right { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+
+@media (max-width: 640px) {
+  .medical-modules-grid {
+    grid-template-columns: 1fr;
+  }
+}

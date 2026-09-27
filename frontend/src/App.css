@@ -1,0 +1,12 @@
+/* Application root container */
+.app-root {
+  min-height: 100vh;
+  position: relative;
+  background-color: var(--bg-void);
+  overflow-x: hidden;
+}
+
+#main-content {
+  position: relative;
+  z-index: 1;
+}

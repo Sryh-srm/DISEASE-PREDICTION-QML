@@ -1,0 +1,954 @@
+Hybrid Quantum Machine Learning Platform - UI Documentation
+
+## Overview
+This is a single-page React website showcasing a hybrid quantum machine learning platform for early disease detection. The UI consists of a main scrolling narrative page and a full-screen interactive demo modal that simulates quantum inference on patient cases.
+
+**Technology/Framework**: React (with Vite), Lucide React for icons, CSS modules for styling
+**Entry Point**: `src/main.jsx` → renders `<App />` into `#root`
+**How to Run**: `npm install` then `npm run dev` (Vite development server)
+**Main Application Structure**:
+- `src/App.jsx`: Main layout orchestrator with state for loading and demo modal
+- `src/components/`: All UI sections and reusable components
+- `src/data/platformData.js`: Static demo data (pipeline stages, medical modules, benchmarks, patient cases)
+- `src/styles/`: Component-specific CSS files
+- `public/`: Static assets (favicon, icons)
+
+## Major Screens/Pages/View
+1. **Main Narrative Page** (default view): Scrollable sections covering:
+   - Hero section with interactive quantum particle canvas
+   - Pipeline stages (scroll-driven transformation architecture)
+   - Problem statement (medical data complexity)
+   - Hybrid approach (classical + quantum)
+   - Quantum visualization (Bloch sphere + circuit simulator)
+   - Medical data modalities (5 research modules)
+   - Explainability & scientific integrity
+   - Controlled experiment benchmark dashboard
+   - Transition to interactive demo
+2. **Interactive Demo Modal** (full-screen overlay): Quantum inference workbench for:
+   - Selecting patient cases (3 synthetic cases)
+   - Adjusting clinical feature vectors via sliders
+   - Configuring quantum circuit (ansatz depth, entanglement topology)
+   - Running simulation and viewing results:
+     - Disease risk probability
+     - Pauli-Z expectation values
+     - Quantum Shapley feature attributions
+     - Simulated quantum state telemetry
+
+---
+
+## 1. GENERAL
+### Technology/Framework
+- React 18 (functional components with hooks)
+- Vite as build tool and dev server
+- Lucide React for iconography
+- CSS modules (via `.css` files imported in components)
+- Plain JavaScript/JSX (no TypeScript)
+
+### Entry Point
+`src/main.jsx` creates React root and renders `<App />` with StrictMode.
+
+### How to Run
+1. Install dependencies: `npm install`
+2. Start development server: `npm run dev`
+3. Build for production: `npm run build` (outputs to `dist/`)
+
+### Main Application Structure
+- **App.jsx**: Controls global state (loading progress, demo modal visibility) and renders all sections in sequence
+- **Navigation.jsx**: Fixed header with logo, nav links, system status, and demo launch button
+- **Content Sections**: Each major topic is a separate component imported and rendered in order in `App.jsx`
+- **InteractiveDemoModal.jsx**: Conditionally rendered full-screen modal when demo is opened
+- **CosmicTunnelBackground.jsx**: Animated background canvas that serves as loading indicator and backdrop
+- **Data Layer**: `src/data/platformData.js` exports static arrays/objects for pipeline stages, medical modules, experiment benchmarks, and patient cases
+
+### Major Screens/Pages/Views
+1. **Main Scrolling Narrative** (ID-based sections):
+   - Hero (`#hero`)
+   - Pipeline (`#pipeline`)
+   - Problem (`#problem`)
+   - Approach (`#approach`)
+   - Quantum Visualization (`#quantum-vis`)
+   - Modalities (`#modalities`)
+   - Explainability (`#explainability`)
+   - Experiment (`#experiment`)
+   - Transition (`#transition`)
+2. **Interactive Demo Modal** (overlay, not a separate route): Full-screen workbench for quantum inference simulation
+
+## 2. NAVIGATION
+### Navigation Options
+- **Header Navigation** (always visible):
+  - Logo/Brand: "HQ-MEDNET" links to `#` (scrolls to top? Actually `href="#"` prevents default, but JS may handle smooth scroll? Currently no scroll behavior attached)
+  - Desktop Nav Links (6 items):
+    - PIPELINE → `#pipeline`
+    - PROBLEM → `#problem`
+    - APPROACH → `#approach`
+    - QUANTUM STATE → `#quantum-vis`
+    - MODALITIES → `#modalities`
+    - EXPERIMENT → `#experiment`
+    - EXPLAINABILITY → `#explainability`
+  - System Status Pill: "STATEVECTOR SIM" (tooltip: "Hardware simulator telemetry")
+  - Primary CTA Button: "LIVE DEMO" (opens modal)
+- **Mobile Navigation**:
+  - Hamburger toggle button (opens vertical menu)
+  - Mobile menu contains same 6 nav links + "LAUNCH EXPERIMENT DEMO →" button (closes menu and opens modal)
+- **Internal Page Navigation**:
+  - All nav links use anchor scrolling to sections on same page
+  - Hero section has two CTAs:
+    - "EXPLORE THE PROJECT" → `#pipeline`
+    - "VIEW DEMO" (opens modal)
+  - ScrollIntro section has interactive pipeline stage buttons that scroll to corresponding stage cards and update active stage
+  - MedicalDataSection cards have no navigation (hover only)
+  - ApproachSection tabs switch classical/quantum/hybrid views (no URL change)
+  - QuantumVisualization has preset buttons (lung/neuro/blood) that set feature vector values
+  - ExperimentPreview has toggle between quantum/classical confusion matrix
+  - InteractiveDemoModal has:
+    - Patient case selector cards (3 cases)
+    - Feature sliders (4 parameters)
+    - Ansatz controls (depth: 1-3, topology: full/linear/ring)
+    - ZNE toggle (simulated noise mitigation)
+    - Execute button runs simulation
+    - Close button (X) exits modal
+- **Footer Section**:
+  - Contains "Final Research Manifesto Statement & Credentials" (Footer.jsx)
+  - Footer has demo launch button (same as header)
+ - No additional navigation links
+
+### Screen-to-Screen Navigation
+All navigation is within the single page via anchor links or state changes. No actual page transitions; the modal overlays the main page.
+
+### Routing/State-Based Navigation
+- No client-side routing library (e.g., React Router) used
+- Navigation relies on:
+  - Anchor links with `href` matching section IDs
+  - React state for:
+    - Loading progress (`isLoaded`, `loadingProgress`)
+    - Demo modal visibility (`isDemoOpen`)
+    - Active pipeline stage (`activeStageIndex`)
+    - Selected modality in ProblemSection (`selectedModality`)
+    - Active tab in ApproachSection (`activeTab`)
+    - Active feature preset in QuantumVisualization (`activePreset`)
+    - Active confusion matrix tab in ExperimentPreview (`activeMatrixTab`)
+    - Selected patient case in InteractiveDemoModal (`selectedCaseId`)
+    - Feature vector values in InteractiveDemoModal (`customFeatures`)
+    - Quantum circuit settings (`ansatzDepth`, `topology`, `zneActive`)
+    - Simulation execution state (`isExecuting`, `executionFinished`)
+
+## 3. USER INPUTS
+### Hero Section (`Hero.jsx`)
+- **Buttons**:
+  - "EXPLORE THE PROJECT" (anchor link to `#pipeline`)
+  - "VIEW DEMO" (button, opens modal via `onOpenDemo` prop)
+- **Canvas Interactions**:
+  - Interactive quantum particle field (mouse repulsion/entanglement)
+  - Canvas resizes with window
+ - Particles respond to mouse position (repulsion within 180px)
+- **No form inputs**
+
+### ScrollIntro Section (`ScrollIntro.jsx`)
+- **Pipeline Stage Buttons**:
+  - 6 buttons (one per stage) in left sidebar
+  - Clicking a button:
+    - Sets active stage index
+    - Scrolls corresponding stage card into view (smooth)
+    - Updates progress bar height and live vector readout
+- **Live Vector Readout**:
+  - Displays math formulation, stage/06, and readout text for active stage
+ - Updated automatically via intersection observer as user scrolls
+- **No form inputs**
+
+### Problem Section (`ProblemSection.jsx`)
+- **Modality Selector**:
+  - 6 buttons (MRI, CT, X-ray, Blood, EHR, Genomic) in a pill grid
+  - Clicking a button:
+    - Updates selected modality state
+    - Displays dimension, bottleneck, and problem description for that modality
+    - Updates detail card and consequence text
+- **No text inputs, toggles, or sliders**
+
+### Approach Section (`ApproachSection.jsx`)
+- **Architecture Tabs**:
+  - 3 buttons: Classical ML, Pure Quantum, Hybrid Model (ours)
+  - Clicking a tab:
+    - Sets activeTab state
+    - Highlights selected column (spotlight effect)
+    - Shows corresponding architecture flow diagram and verdict
+- **No form inputs**
+
+### Quantum Visualization Section (`QuantumVisualization.jsx`)
+- **Feature Presets**:
+  - 3 buttons: Pulmonary CT Nodule, Brain Amyloid-PET, Multi-Analyte Liquid Biopsy
+  - Clicking sets feature vector to predefined values and updates active preset
+- **Feature Vector Sliders**:
+  - 4 sliders (range inputs) for x₁, x₂, x₃, x₄ (each 0 to π rad, step 0.02)
+  - Each slider:
+    - Displays feature name/code (e.g., "x₁ // Density")
+    - Shows current value in radians (to 2 decimal places)
+    - On change: updates vector state, sets active preset to 'custom'
+- **Bloch Sphere Canvas**:
+  - Interactive 3D visualization (drag to rotate)
+  - Displays live telemetry:
+    - Polar angle θ (rad and degrees)
+    - Azimuthal phase φ (rad and degrees)
+    - |0⟩ ground probability (%) with visual meter
+    - |1⟩ excited probability (%) with visual meter
+- **Circuit Diagram**:
+  - Static 4-qubit circuit visualization (no user interaction)
+  - Shows gates: H, Rz(x_i), Ry(θ_i), CNOT, Measurement
+  - Note about gate functions (non-interactive)
+- **Supplementary Manifold Figure**:
+  - Static image with caption (no interaction)
+
+### Medical Data Section (`MedicalDataSection.jsx`)
+- **Module Cards**:
+  - 6 cards (one per medical module) in responsive grid
+  - Each card displays on hover:
+    - Slight lift animation - No click interaction (hover-only)
+  - Card contents:
+    - Top strip: icon, MOD-ID, dimension
+    - Title and target (primary condition)
+    - Modality (input type)
+    - Quantum advantage description - Extracted features (tags)
+    - Benchmark delta (performance improvement)
+    - Dataset source - Corner decorative reticles (non-interactive)
+
+### Explainability Section (`ExplainabilitySection.jsx`)
+- **Transparency Pillars**:
+  - 4 cards (privacy, Shapley attributions, baseline comparison, auditable protocols)
+  - Each card: icon, title, description (no interaction)
+- **Diagnostic Pipeline Visual Flow**:
+  - Horizontal flow diagram with 6 steps (data → feature vector → quantum state → measurement → prediction → explanation)
+  - Static SVG-like layout with arrows (no interaction)
+- **Scientific Ethics Banner**:
+  - Static disclosure text (no interaction)
+
+### Experiment Preview Section (`ExperimentPreview.jsx`)
+- **Demo Data Alert Banner**:
+  - Static notice: "DEMO DATA ONLY" (no interaction)
+- **Experiment Telemetry Board**:
+  - Metadata grid: dataset, classical baseline, quantum architecture, cohort size (all static text)
+- **Metrics Table**:
+  - 6 rows (ROC-AUC, Balanced Accuracy, Early Stage Sensitivity, Precision, F1-Score, False Alarm Rate)
+  - Each row shows classical value, quantum value, delta (color-coded +/–)
+  - No sorting or interaction
+- **ROC-AUC Curve Chart**:
+  - SVG chart with:
+    - Grid lines
+    - Diagonal chance line
+    - Classical ROC path (dashed orange/white)
+    - Quantum ROC path (solid cyan)
+    - Axis labels (FPR 0.0-1.0, TPR 0.0-1.0)
+  - No tooltip or zoom interaction
+- **Confusion Matrix Toggle**:
+  - 2 buttons: Quantum VQC, Classical RF
+  - Clicking switches which matrix is displayed in the inspection panel
+- **Confusion Matrix Inspection Panel**:
+  - 4 cells (True Positive, False Positive, False Negative, True Negative)
+  - Each cell shows label, value, and sub-description
+  - Values change based on selected matrix tab
+
+### Interactive Demo Modal (`InteractiveDemoModal.jsx`)
+- **Header**:
+  - Lab logo icon - Platform title and subtitle (static)
+  - Status badge: "DEMO PLATFORM ACTIVE" (static)
+  - Close button (X) with label "EXIT PLATFORM"
+- **Patient Selection Panel**:
+  - **Case Selector Cards**:
+    - 3 buttons (one per patient case: PX-8420, PX-3109, PX-1954)
+    - Clicking a card:
+      - Updates selected case ID - Loads that case's raw features, feature names, and clinical context
+      - Resets custom features to case's raw features
+  - **Clinical Profile Card**:
+    - Static text showing case's clinical context (no interaction)
+  - **Parameterized Clinical Features**:
+    - 4 slider rows (one per feature)
+    - Each row:
+      - Feature name (from case)
+      - Current value in radians (to 2 decimal places)
+      - Slider input (range 0.1 to π rad, step 0.05)
+      - On change: updates that feature's value in customFeatures state
+  - **Quantum Circuit Architecture Controls**:
+    - Entanglement topology dropdown (options: Full 2-Qubit Mesh, Linear Nearest-Neighbor, Circular Ring Topology)
+    - Ansatz layers pill group (buttons for L=1, L=2, L=3)
+ - Clicking a layer button sets ansatzDepth state
+    - No direct interaction for ZNE toggle (it's a checkbox? Actually it's a toggle switch? In code: `<span className="c-label">ZNE ACTIVE:</span>` followed by a toggle? Wait, checking code: there's a `<div className="control-item">` for ZNE? Actually I see only entanglement and ansatz layers. Let me re-examine: In the modal, there is a section for ZNE? In the code I see:
+ ```jsx<div className="control-item">
+                <span className="c-label">ZNE ACTIVE:</span>
+                <span className="toggle-switch">
+<span className=`toggle-slider ${zneActive ? 'is-active' : ''}`></span>
+                </span>
+              </div>
+      ```
+      Actually, looking back at the provided code for InteractiveDemoModal.jsx, I don't see that. Wait, I must have misremembered. Let me look at the code again from the provided snippet.
+      In the provided code for InteractiveDemoModal.jsx, I see:
+      ```jsx
+            {/* Quantum Circuit Architecture Controls */}
+            <div className="panel-section-title mono">
+              <span>03 // ANSATZ & NOISE MITIGATION</span>
+            </div>
+
+            <div className="ansatz-controls-row mono">
+              <div className="control-item">
+                <span className="c-label">ENTANGLEMENT:</span>
+                <select
+                  value={topology}
+                  onChange={(e) => setTopology(e.target.value)}
+                  className="quantum-select"
+                >
+                  <option value="full">Full 2-Qubit Mesh</option>
+                  <option value="linear">Linear Nearest-Neighbor</option>
+                  <option value="ring">Circular Ring Topology</option>
+                </select>
+              </div>
+
+              <div className="control-item">
+                <span className="c-label">ANSATZ LAYERS:</span>
+                <div className="layer-pill-group">
+                  {[1, 2, 3].map((l) => (
+                    <button
+                      key={l}
+                      className={`layer-btn ${ansatzDepth === l ? 'is-active' : ''}`}
+                      onClick={() => setAnsatzDepth(l)}
+                    >
+                      L={l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+      ```
+      So there is no ZNE toggle in the provided code. However, in the results telemetry box, it says "MITIGATION: ZNE 2nd Order". So ZNE is hardcoded to active? Actually, looking at the state variables:
+      ```jsx
+      const [zneActive, setZneActive] = useState(true);
+      ```
+      But I don't see where it's used in the JSX. Possibly the code provided is incomplete? Or maybe the ZNE toggle is missing from the provided snippet?
+      Given the provided code, there is no ZNE toggle in the UI. However, the state variable exists and is set to true. The telemetry displays it as active.
+      For the purpose of this documentation, I will note that based on the provided code, there is no ZNE toggle UI element, but the state exists and is hardcoded to active.
+      However, to be accurate to the provided code, I should not mention a ZNE toggle if it's not in the JSX.
+      Let me double-check the provided code for InteractiveDemoModal.jsx from the user's message.
+      In the user's message, the code for InteractiveDemoModal.jsx does not contain any ZNE toggle.  Therefore, I will omit it from the inputs.
+      But wait, in the results telemetry box, there is:
+      ```jsx
+              <div className="results-telemetry-box mono">
+                <div className="state-line">
+                  <span className="lbl">RESOLVED STATE:</span>
+                  <span className="val">{quantumInference.qubitState}</span>
+                </div>
+                <div className="telemetry-cols">
+                  <span>SIMULATOR RUNTIME: 4.8 ms</span>
+                  <span>SHOTS: 4096</span>
+                  <span>CIRCUIT FIDELITY: 99.82%</span>
+                  <span>MITIGATION: ZNE 2nd Order</span>
+                </div>
+              </div>
+      ```
+      So the ZNE is mentioned in the telemetry as hardcoded "ZNE 2nd Order".  Therefore, there is no toggle for ZNE in the UI based on the provided code.
+      I will proceed accordingly.
+    - Execute Button:
+      - Primary CTA: "EXECUTE QUANTUM INFERENCE" (with Play icon)
+      - When clicked:
+        - Sets isExecuting to true, executionFinished to false
+        - After 1.2 seconds (simulated delay): sets isExecuting false, executionFinished true
+      - While executing: shows spinner and "COMPUTING STATEVECTOR & OBSERVABLES..."
+      - Disabled when isExecuting is true
+- **Results Panel** (appears after execution finishes):
+  - **Risk Probability Score Banner**:
+    - Shows disease risk percentage (from case's quantumInference.diseaseRisk * 100)
+    - Risk level badge (e.g., "HIGH EARLY DETECTION RISK")
+    - Recommendation text
+    - Styling changes based on risk level (high/low)
+  - **Pauli Expectation Values <Z_i>**:
+    - 4 observable boxes (one per qubit)
+    - Each shows:
+      - Observable label (⟨Z₀⟩, ⟨Z₁⟩, ⟨Z₂⟩, ⟨Z₃⟩)
+      - Value (signed, to 2 decimal places, with + for positive)
+      - Bar track with fill indicating magnitude (left half for negative, right half for positive)
+      - Color: cyan for positive, violet for negative
+  - **Quantum Shapley Explainability Decomposition**:
+    - List of features from case's quantumInference.shapleyExplanations
+    - Each item:
+      - Feature name and percentage weight (e.g., "Ground-Glass Opacity Ratio (x₃) 44%")
+      - Filled bar indicating weight percentage
+      - Type label (e.g., "Quantum Phase Entangled")
+  - **Simulated Quantum State Telemetry**:
+    - Resolved state (ket notation from case's quantumInference.qubitState)
+    - Simulator runtime (hardcoded 4.8 ms)
+    - Shots (hardcoded 4096)
+    - Circuit fidelity (hardcoded 99.82%)
+    - Mitigation (hardcoded "ZNE 2nd Order")
+- **No file uploads, text inputs, radio buttons, or checkboxes (aside from the missing ZNE toggle)**
+
+## 4. FEATURES
+### Hero Section
+- **Interactive Quantum Particle Canvas**:
+  - What user can do: Move mouse to repulse/entangle particles; resize window
+  - What happens: Particles move away from mouse cursor with elastic connections between nearby particles - Functional: Yes (uses requestAnimationFrame, mouse events)
+  - Validation/Restrictions: None
+- **Headline and Lead Text**:
+  - What user can do: Read
+  - What happens: None (static)
+  - Functional: UI only
+- **CTA Buttons**:
+  - What user can do: Click to navigate or open demo
+  - What happens: Scroll to pipeline section or open modal
+  - Functional: Yes
+
+### ScrollIntro Section
+- **Interactive Pipeline Scrubber**:
+  - What user can do: Click stage buttons in sidebar; scroll to trigger intersection observer
+  - What happens: - Button click: sets active stage, scrolls card into view, updates progress bar and vector readout
+    - Scrolling: intersection observer updates active stage as cards enter viewport
+  - Functional: Yes (state + DOM measurements)
+  - Validation/Restrictions: Buttons limited to 6 stages; scroll thresholds configured via IntersectionObserver options
+- **Live Vector Card**:
+  - What user can do: View (read-only)
+  - What happens: Updates when active stage changes
+  - Functional: Yes
+- **Transformation Cards**:
+  - What user can do: View (read-only)
+  - What happens: Active card gets "card-focused" class (visual highlight)
+  - Functional: Yes (class change)
+
+### Problem Section
+- **Modality Complexity Selector**:
+  - What user can do: Click modality buttons
+  - What happens: Updates selected modality; displays dimension, bottleneck, and problem text for that modality - Functional: Yes (state update)
+  - Validation/Restrictions: Only one modality can be selected at a time
+- **Bottleneck Stat Box**:
+  - What user can do: View (read-only)
+  - What happens: None  - Functional: UI only
+- **Narrative Columns**:
+  - What user can do: Read
+  - What happens: None
+  - Functional: UI only
+
+### Approach Section
+- **Interactive Architecture Selector**:
+  - What user can do: Click tab buttons (Classical, Quantum, Hybrid)
+  - What happens: Sets activeTab; applies "column-spotlight" class to selected column; shows corresponding flow diagram and verdict
+  - Functional: Yes
+  - Validation/Restrictions: Only one tab active at a time
+- **Flow Diagrams**:
+  - What user can do: View (read-only)
+  - What happens: None
+  - Functional: UI only
+- **Column Verdicts**:
+  - What user can do: View (read-only)
+  - What happens: None
+  - Functional: UI only
+
+### Quantum Visualization Section
+- **Feature Presets**:
+  - What user can do: Click preset buttons (lung, neuro, blood)
+  - What happens: Sets vector to predefined values; updates active preset; updates sliders and Bloch sphere
+  - Functional: Yes
+  - Validation/Restrictions: Mutually exclusive; one preset active at a time
+- **Feature Vector Sliders**:
+  - What user can do: Drag slider thumb or click to set value
+  - What happens: Updates corresponding vector element; sets active preset to 'custom'; updates Bloch sphere telemetry and circuit diagram labels (Rz gates show values)
+  - Functional: Yes (controlled component)
+  - Validation/Restrictions: Min 0, max π (~3.14), step 0.02; value clamped to range
+- **Bloch Sphere Canvas**:
+  - What user can do: Click and drag to rotate sphere; release to stop
+  - What happens: Sphere rotates based on drag movement; state vector arrow updates based on current theta/phi (from vector[0], vector[1])
+  - Functional: Yes (requestAnimationFrame, mouse events)
+  - Validation/Restrictions: Inertia not implemented; stops when mouse released
+- **Live Bloch Telemetry**:
+  - What user can do: View (read-only)
+  - What happens: Updates when theta/phi change (from vector or drag)
+  - Functional: Yes
+- **Probability Meters**:
+  - What user can do: View (read-only)
+  - What happens: Updates when theta changes (prob0 = cos²(θ/2)*100, prob1 = sin²(θ/2)*100)
+  - Functional: Yes
+- **Circuit Diagram**:
+  - What user can do: View (read-only)
+  - What happens: Gate labels update with current vector values (Rz(x_i) show x_i)
+  - Functional: Yes (values update)
+- **Supplementary Manifold Figure**:
+  - What user can do: View image, read caption
+  - What happens: None
+  - Functional: UI only
+
+### Medical Data Section
+- **Research Module Cards**:
+  - What user can do: Hover over card
+  - What happens: Card lifts slightly; no click action
+  - Functional: UI only (hover effect)
+  - Validation/Restrictions: No touch/click fallback specified
+- **Card Contents**:
+  - What user can do: Read all text (icon, title, dimension, quantum advantage, features, benchmark, dataset)
+  - What happens: None
+  - Functional: UI only
+
+### Explainability Section
+- **Transparency Pillars**:
+  - What user can do: Read  - What happens: None
+  - Functional: UI only
+- **Diagnostic Pipeline Visual Flow**:
+  - What user can do: View flow diagram
+  - What happens: None
+  - Functional: UI only
+- **Scientific Ethics Banner**:
+  - What user can do: Read disclosure
+  - What happens: None
+  - Functional: UI only
+
+### Experiment Preview Section
+- **Demo Data Alert Banner**:
+  - What user can do: Read notice
+  - What happens: None
+  - Functional: UI only
+- **Experiment Telemetry Board**:
+  - What user can do: Read metadata
+  - What happens: None - Functional: UI only
+- **Metrics Table**:
+  - What user can do: Read values
+  - What happens: None
+  - Functional: UI only
+- **ROC-AUC Curve Chart**:
+  - What user can do: View chart
+  - What happens: None
+  - Functional: UI only (static SVG)
+- **Confusion Matrix Toggle**:
+  - What user can do: Click Quantum VQC or Classical RF button
+  - What happens: Sets activeMatrixTab; updates displayed matrix in inspection panel
+  - Functional: Yes
+  - Validation/Restrictions: Only one tab active at a time
+- **Confusion Matrix Inspection Panel**:
+  - What user can do: View (read-only)
+  - What happens: Values change when tab toggled
+  - Functional: Yes
+
+### Interactive Demo Modal
+- **Patient Case Selector Cards**:
+  - What user can do: Click a case card
+  - What happens: Updates selected case; loads that case's data (features, names, context); resets custom features to case's raw features
+  - Functional: Yes
+  - Validation/Restrictions: Only one case selected at a time
+- **Clinical Profile Card**:
+  - What user can do: Read
+  - What happens: None
+  - Functional: UI only
+- **Parameterized Clinical Features (Sliders)**:
+  - What user can do: Drag slider thumb or click to set value for each feature
+  - What happens: Updates that feature's value in customFeatures state
+  - Functional: Yes (controlled components)
+  - Validation/Restrictions: Min 0.1, max π (~3.14), step 0.05; value clamped to range
+- **Quantum Circuit Architecture Controls**:
+  - **Entanglement Topology Dropdown**:
+    - What user can do: Select option from dropdown - What happens: Sets topology state (full/linear/ring)
+    - Functional: Yes
+    - Validation/Restrictions: Three fixed options
+  - **Ansatz Layers Pill Group**:
+    - What user can do: Click layer button (L=1, L=2, L=3)
+    - What happens: Sets ansatzDepth state
+    - Functional: Yes
+    - Validation/Restrictions: Only one layer count active at a time (visual highlight)
+  - *Note: Based on provided code, there is no ZNE toggle UI element, though state exists and telemetry shows "ZNE 2nd Order" as hardcoded.*
+- **Execute Button**:
+  - What user can do: Click button (when not running)
+  - What happens:
+    - Sets isExecuting=true, executionFinished=false
+    - After 1.2s timeout: sets isExecuting=false, executionFinished=true
+    - Results panel populates with data from selected case's quantumInference object
+  - Functional: Yes (simulated delay)
+  - Validation/Restrictions: Button disabled while executing; prevents multiple simultaneous runs
+- **Results Panel** (visible after executionFinished=true):
+  - **Risk Probability Score Banner**:
+    - What user can do: Read percentage, risk level, recommendation
+    - What happens: None (values come from case data)
+    - Functional: UI only (display only)
+  - **Pauli Expectation Values<Z_i>**:
+    - What user can do: View values and bar graphs
+    - What happens: None    - Functional: UI only (display only)
+  - **Quantum Shapley Explainability Decomposition**:
+    - What user can do: Read feature names, percentages, types
+    - What happens: None
+    - Functional: UI only (display only)
+  - **Simulated Quantum State Telemetry**:
+    - What user can do: Read resolved state, runtime, shots, fidelity, mitigation
+    - What happens: None
+    - Functional: UI only (display only; values hardcoded or from case data)
+- **Close Button**:
+  - What user can do: Click X or text "EXIT PLATFORM"
+  - What happens: Sets isDemoOpen to false (closes modal); restores body overflow
+  - Functional: Yes
+
+### Global Features
+- **Loading Sequence** (App.jsx):
+  - What user can do: View loading overlay and progress bar
+  - What happens:
+    - On mount: body scroll locked, progress bar animates to 100% over ~3-5 seconds
+    - At 100%: short pause, then sets isLoaded=true, unlocks scroll, adds 'is-loaded' class to body
+  - Functional: Yes (simulated loading)
+  - Validation/Restrictions: None
+- **Cosmic Tunnel Background** (CosmicTunnelBackground.jsx):
+  - What user can do: View animated background
+  - What happens:
+    - While !isLoaded: animated tunnel serves as loading backdrop
+    - When isLoaded=true: continues as animated background behind content
+  - Functional: Yes (canvas animation)
+  - Validation/Restrictions: None
+- **Lab Grid Overlay** (App.jsx):
+  - What user can do: View subtle mathematical grid
+  - What happens: None (static div with class "lab-grid-bg")
+  - Functional: UI only
+- **Responsive Design**:
+  - What user can do: Resize browser  - What happens: Layout adjusts (navigation collapses to hamburger, sections reflow, canvas sizes adjust)
+  - Functional: Yes (CSS media queries implied by class usage, though not seen in provided CSS files)
+  - Validation/Restrictions: Breakpoints not visible in provided code; assumed to exist in CSS
+
+## 5. DATA
+### Static/Mock Data
+- All data in `src/data/platformData.js` is explicitly marked as DEMO DATA for scientific integrity
+- **PIPELINE_STAGES**: 6 objects with id, step, name, subtitle, description, math (LaTeX), readout, indicators array
+- **MEDICAL_MODULES**: 6 objects (neuro, pulmo, cardio, blood, genomic) each with:
+  - id, icon (emoji), title, modality, target, dimension, quantumAdvantage, baselineDelta (string with "%"), dataset, features array
+- **EXPERIMENT_BENCHMARKS**: Object with:
+  - datasetName, cohortSize, split, hardware, status (all strings)
+  - metrics array (6 objects: name, classical, quantum, delta, unit)
+  - rocPoints array (7 objects: fpr, classical, quantum)
+  - confusionMatrix object with classical and quantum subobjects (tp, fp, tn, fn)
+- **PATIENT_CASES**: 3 objects (PX-8420, PX-3109, PX-1954) each with:
+  - id, name, age, sex, symptomDuration, imagingModality, rawFeatures array (4 numbers), featureNames array, clinicalContext string
+  - quantumInference object with:
+    - qubitState (string), expectationValues array (4 numbers), diseaseRisk (number), riskLevel (string), recommendation (string), shapleyExplanations array (objects: feature, weight, type)
+
+### Hardcoded Values
+- **Hero Section**:
+  - Initial telemetry: statePhase="0.785 rad", entropy="1.42 bits", fidelity="99.82%"
+  - Particle count: Math.min(width > 768 ? 90 : 45, 120)
+  - Mouse repulsion distance: 180px - Connection distance threshold: 130px
+- **ScrollIntro Section**:
+  - Progress bar height calculation: ((activeStageIndex + 1) / PIPELINE_STAGES.length) * 100%
+  - Vector readout comes from PIPELINE_STAGES[activeStageIndex].readout
+- **Problem Section**:
+  - Modalities data from DATA_COMPLEXITY_MODALITIES array (6 objects)
+- **Approach Section**:
+  - Tab labels: "01 // CLASSICAL ML", "02 // PURE QUANTUM", "03 // HYBRID MODEL (OURS)"
+  - Flow diagram step labels and titles hardcoded in each column
+- **QuantumVisualization Section**:
+  - Initial vector: [0.84, 1.45, 2.10, 0.65]
+  - Preset vectors: lung=[0.84,1.45,2.65,0.72], neuro=[1.25,2.10,0.45,1.82], blood=[0.35,0.62,0.41,0.58]
+  - Slider step: 0.02, min 0, max Math.PI
+  - Feature names array: ['Density', 'Vessel Coherence', 'Phase Entropy', 'Hounsfield']
+  - Bloch sphere radius: Math.min(width, height) * 0.36
+  - Cannon constants: fov=400, various scaling factors
+  - Circuit diagram gates: hardcoded labels (H, Rz(x_i), Ry(θ_i), CNOT, M)
+- **MedicalDataSection**:
+  - Card dimensions and text from MEDICAL_MODULES
+- **ExplainabilitySection**:
+  - Transparency pillars array hardcoded in component - Pipeline flow step labels and titles hardcoded
+- **ExperimentPreview**:
+  - All data from EXPERIMENT_BENCHMARKS
+  - ROC chart SVG path data generated from rocPoints
+  - Confusion matrix values from confusionMatrix[activeMatrixTab]
+- **InteractiveDemoModal**:
+  - Patient cases from PATIENT_CASES
+  - Initial state: selectedCaseId='PX-8420', ansatzDepth=2, topology='full', zneActive=true, isExecuting=false, executionFinished=true
+  - Slider range: min 0.1, max Math.PI, step 0.05
+  - Entanglement options: "Full 2-Qubit Mesh", "Linear Nearest-Neighbor", "Circular Ring Topology"
+  - Ansatz layers: [1,2,3]
+  - Execution timeout: 1200ms
+  - Results telemetry hardcoded: runtime="4.8 ms", shots="4096", fidelity="99.82%", mitigation="ZNE 2nd Order"
+  - Risk scoring: uses quantumInference.diseaseRisk from case data - Shapley values: uses quantumInference.shapleyExplanations from case data
+  - Expectation values: uses quantumInference.expectationValues from case data
+  - Qubit state: uses quantumInference.qubitState from case data
+
+### Sample Predictions/Results
+- **Experiment Preview**:
+  - ROC-AUC: classical 0.832, quantum 0.918, delta +0.086
+  - Balanced Accuracy: classical 79.4%, quantum 87.6%, delta +8.2%
+  - Early Stage Sensitivity: classical 71.8%, quantum 84.3%, delta +12.5%
+  - Precision: classical 76.5%, quantum 86.1%, delta +9.6%
+  - F1-Score: classical 0.740, quantum 0.852, delta +0.112
+  - False Alarm Rate: classical 18.2%, quantum 7.9%, delta -10.3%
+- **Confusion Matrices** (N=960 test samples):
+  - Classical: TP=345, FP=88, TN=392, FN=135
+  - Quantum: TP=412, FP=38, TN=442, FN=68
+- **Patient Cases** (sample values from PX-8420):
+  - Disease risk: 0.874 (87.4%)
+  - Expectation values: [0.68, -0.42, 0.81, 0.55]
+  - Shapley explanations:
+    - Ground-Glass Opacity Ratio (x₃): 44% (Quantum Phase Entangled)
+    - Spiculation Density (x₁): 29% (Hilbert Kernel Amplitude)
+    - Perinodular Vessel Distortion (x₂): 18% (Z₁Z₂ Cross-Coupling)
+    - Hounsfield Mean (x₄): 9% (Linear Superposition)
+- **Quantum Visualization** (initial state):
+  - Vector: [0.84, 1.45, 2.10, 0.65]
+  - Theta=0.84 rad (~48.2°), Phi=1.45 rad (~83.1°)
+  - |0⟩ probability: 67.3%, |1⟩ probability: 32.7%
+
+### Charts/Graphs
+- **Hero Section**: Animated particle canvas (not a chart)
+- **ScrollIntro Section**: None- **Problem Section**: None
+- **Approach Section**: None
+- **QuantumVisualization Section**:
+  - Bloch sphere (3D quantum state visualization)
+  - Probability meters (bar graphs for |0⟩ and |1⟩)
+- **MedicalDataSection**: None
+- **ExplainabilitySection**: None
+- **ExperimentPreview Section**:
+  - ROC-AUC curve (SVG chart plotting true positive rate vs false positive rate)
+  - Confusion matrix (2x2 grid of values)
+- **InteractiveDemoModal**:
+  - Risk probability display (percentage with badge)
+  - Pauli expectation bar graphs (4 bipolar bar graphs)
+  - Shapley explanations bar graph (horizontal filled bars)
+
+### Tables
+- **ExperimentPreview Section**: Metrics table (6 rows × 4 columns)
+- **Other sections**: No traditional tables; data presented in cards, lists, or grids
+
+### Cards/Statistics
+- **Hero Section**: None
+- **ScrollIntro Section**: Live Vector Card (stats: stage, math, readout)
+- **Problem Section**:
+  - Bottleneck Stat Box (3 rows: classical capacity, quantum capacity, diagnostic noise ratio)
+  - Modality detail display (dimension, status, title, problem, consequence)
+- **Approach Section**: Column verdicts (each column has a verdict box with label and text)
+- **QuantumVisualization Section**: None- **MedicalDataSection**: 6 medical research modules cards (each with multiple data points)
+- **ExplainabilitySection**: 4 transparency pillar cards (each with icon, title, description)
+- **ExperimentPreview Section**:
+  - Experiment telemetry board (4 metadata items)
+  - Metrics table (can be seen as a table of statistics)
+  - Confusion matrix inspection panel (4 statistic cells)
+- **InteractiveDemoModal**:
+  - Risk outcome card (percentage, badge, recommendation)
+  - Observables grid (4 expectation value cells)
+  - Shapley breakdown list (4 feature attribution cells)
+  - Results telemetry box (4 telemetry items)
+
+### Data Loaded from Files/APIs
+- **No external API calls** in provided code
+- All data imported from local `src/data/platformData.js`
+- Images imported from `src/assets/`:
+  - heroArtwork: ../assets/quantum_medical_hero.jpg
+  - manifoldArt: ../assets/quantum_manifold_mapping.jpg
+  - Logo icons: Lucide React (no external fetch)
+
+## 6. ML/QML RELATED UI
+### Prediction
+- **InteractiveDemoModal**:
+  - Shows disease risk percentage from quantum inference (simulated)
+  - Shows clinical recommendation based on risk level
+  - **Functional**: Display only (values from static case data)
+- **ExperimentPreview**:
+  - Shows ROC-AUC, sensitivity, precision etc. for classical vs quantum models
+  - **Functional**: Display only (static benchmark data)
+
+### Classification
+- **Implicit in prediction**: Binary classification (early anomaly vs benign) via risk threshold
+- **Not explicitly shown as classification UI**; risk percentage is continuous
+
+### Model Selection
+- **ApproachSection**:
+  - Allows switching between Classical ML, Pure Quantum, Hybrid Model views
+  - **Functional**: UI only (does not change actual model; just shows different architecture diagrams)
+- **ExperimentPreview**:
+  - Toggle between Quantum VQC and Classical RF confusion matrices
+  - **Functional**: UI only (switches display of precomputed results)
+
+### Classical ML
+- **ApproachSection**: Classical ML column shows:
+  - Flow: Raw Data → Preprocessing → Feature Extraction (ResNet/CNN) → Classical Model (RF/MLP)
+  - Verdict: "Polynomial scaling; vulnerable to small-sample noise"
+- **ExperimentPreview**: Classical RF metrics and confusion matrix
+
+### Quantum ML/QML
+- **QuantumVisualization Section**:
+  - Bloch sphere for single qubit state visualization
+  - Feature vector sliders encoding clinical scalars into rotation angles
+  - 4-qubit circuit diagram showing:
+    - Hadamard gates (superposition)
+    - Rz(x_i) gates (feature encoding via Pauli-Z rotations)
+    - Ry(θ_i) gates (ansatz rotations)
+    - CNOT entanglers
+    - Measurement gates
+  - **Functional**:  - Sliders and Bloch sphere are interactive (user can change state)
+    - Circuit diagram updates gate labels with values (but gates themselves not executable)
+- **ApproachSection**: Pure Quantum column shows:
+  - Flow: Normalized Features → Feature Encoding (Angle & Amplitude) → Quantum Feature Map (ZZ-Entanglement U_Φ(x)) → Quantum Circuit (Ansatz Layers W(θ)) → Measurement (Pauli-Z Expectation)
+  - Verdict: "Input loading barrier; barren plateaus if unconstrained"
+- **InteractiveDemoModal**:
+  - Ansatz depth and entanglement topology controls (simulate VQC structure)
+  - Executed button triggers simulated inference (delay only)
+  - Results show expectation values, Shapley attributions, qubit state
+ - **Functional**: Simulation is mocked (timeout only); results come from static case data- **ExperimentPreview**: Quantum VQC metrics and confusion matrix
+
+### Confidence/Probability
+- **Hero Section**: Initial telemetry shows fidelity "99.82%"
+- **ScrollIntro Section**: Pipeline stage readouts include fidelity/similarity metrics (e.g., "State Fidelity: 99.4%")
+- **QuantumVisualization Section**:
+  - Bloch sphere shows |0⟩ and |1⟩ probabilities as percentages and bar meters
+  - Derived from theta: prob0 = cos²(θ/2)*100, prob1 = sin²(θ/2)*100
+- **ExperimentPreview**:
+  - ROC-AUC as probability measure (0.0-1.0)
+  - Metrics like sensitivity, precision as percentages
+- **InteractiveDemoModal**:
+  - Disease risk percentage (0-100%)
+  - Pauli expectation values as [-1,+1] (not direct probabilities)
+  - Circuit fidelity telemetry: "99.82%"
+
+### Feature Input
+- **QuantumVisualization Section**:
+  - 4 sliders for classical feature vector [x₁, x₂, x₃, x₄] ∈ [0, π]⁴
+  - Feature names: Density, Vessel Coherence, Phase Entropy, Hounsfield - Presets for lung, neuro, blood cases
+- **InteractiveDemoModal**:
+  - 4 sliders for case-specific clinical features (names vary by case)
+  - Example features: Spiculation Density, Perinodular Vessel Distortion, Ground-Glass Opacity Ratio, Hounsfield Mean (for lung case)
+  - Range: [0.1, π] rad (step 0.05)
+
+### Model Performance
+- **ExperimentPreview Section**:
+  - Side-by-side metrics table (ROC-AUC, Accuracy, Sensitivity, Precision, F1-Score, False Alarm Rate)
+  - Delta column shows improvement (positive = quantum better)
+  - ROC curve visualizes trade-off between TPR and FPR - Confusion matrices show raw counts of TP, FP, TN, FN
+- **MedicalDataSection**:
+  - Each module card shows "baselineDelta" (e.g., "+8.4% ROC-AUC over 3D ResNet")
+  - These are hardcoded strings claiming performance improvement
+
+### Accuracy
+- **See Model Performance above**: Accuracy metrics include ROC-AUC, Balanced Accuracy, etc.
+- **Not explicitly labeled as "accuracy"** but related metrics are shown
+
+### Results Visualization
+- **Hero Section**:
+  - Quantum particle canvas (visualizes quantum field interactions)
+  - Hero artwork with HUD overlays (telemetry, callouts, grid, reticles)
+- **ScrollIntro Section**:
+  - Transformation cards with icons, titles, descriptions, formulas, indicators, telemetry
+  - Live vector card with mathematical formulation and readout
+- **Problem Section**:
+  - Modality cards with icons and text
+  - Bottleneck stat box comparing classical vs quantum capacity
+- **ApproachSection**:
+  - Side-by-side architecture flow diagrams with icons and text
+  - Column verdicts highlighting bottlenecks/advantages
+- **QuantumVisualization Section**:
+  - Interactive Bloch sphere with state vector arrow, coordinate axes, projection shadow
+  - Live telemetry panel (angles, probability meters)
+  - 4-qubit circuit diagram with gate labels
+  - Supplementary manifold figure with caption
+- **MedicalDataSection**:
+  - Grid of module cards with icons, modality, target, quantum advantage, features, benchmark delta
+- **ExplainabilitySection**:
+  - Transparency pillars with icons and text
+  - Diagnostic pipeline flow diagram with labeled steps
+  - Scientific ethics banner
+- **ExperimentPreview Section**:
+  - Metrics table
+  - ROC-AUC curve chart (SVG)
+  - Confusion matrix inspection panel
+- **InteractiveDemoModal**:
+  - Risk outcome bar with percentage and badge
+  - Observables grid with bipolar bar graphs for ⟨Z_i⟩
+  - Shapley explanations bar graph with filled bars and type labels
+  - Results telemetry box with state, runtime, shots, fidelity, mitigation
+
+## 7. UI STATES
+### Loading States
+- **App.jsx**:
+  - Initial loading overlay with text "INITIALIZING QUANTUM CORE" and animated progress bar
+  - Body scroll locked during loading
+  - CosmicTunnelBackground serves as loading backdrop
+  - Duration: simulated (~3-5 seconds to reach 100%)
+ - After 100%: short pause, then sets isLoaded=true, removes overlay, unlocks scroll
+- **InteractiveDemoModal**:
+  - Execute button shows spinner and "COMPUTING STATEVECTOR & OBSERVABLES..." while isExecuting=true
+  - Duration: fixed 1.2 seconds (simulated)
+
+### Error States
+- **None observed** in provided code
+- No form validation, no API calls that could fail, no try/catch blocks
+
+### Empty States
+- **None observed**
+- All sections have content; no conditional rendering for empty data
+
+### Success States
+- **App.jsx**:
+  - After loading: body gets 'is-loaded' class, CosmicTunnelBackground continues animating, content fully visible
+- **InteractiveDemoModal**:
+  - After execution finishes: results panel appears with data from selected case
+  - Execute button resets to default state (Play icon + "EXECUTE QUANTUM INFERENCE")
+- **ExperimentPreview**:
+  - Confusion matrix toggle shows active state via 'is-active' class on button### Disabled States
+- **InteractiveDemoModal Execute Button**:
+  - Disabled when isExecuting=true (shows spinner, prevents click)
+  - Visual: likely opacity change or cursor not-allowed (not seen in provided CSS but implied by disabled attribute)
+- **Nav Links**: None disabled
+- **Other buttons**: No disabled states observed
+
+### Animations/Transitions
+- **App.jsx**:
+  - Loading progress bar: width animates via state updates
+  - Body class toggle: likely triggers CSS transitions for fade-in (not seen in CSS but implied by 'is-loaded' class usage)
+- **CosmicTunnelBackground.jsx**:
+  - Continuous canvas animation (requestAnimationFrame loop)
+  - When isLoaded changes: likely CSS transition for background shift (not seen in provided code)
+- **Hero.jsx**:
+  - Particle canvas: continuous animation (requestAnimationFrame)
+  - Image loading: placeholder shimmer while !imageLoaded, then transition to img-loaded class- **ScrollIntro.jsx**:
+  - Pipeline rail progress bar height: animates via state change (CSS transition likely)
+  - Stage button clicks: smooth scroll into view (behavior: 'smooth')
+  - Active stage button: 'is-active' class (likely CSS transition for color/transform)
+  - Passed stages: 'is-passed' class
+- **ProblemSection.jsx**:
+  - Modality button click: 'is-selected' class (color/transform transition)
+- **ApproachSection.jsx**:
+  - Tab button click: 'is-active' class (color/transform transition)
+  - Column spotlight: 'column-spotlight' class (likely layout/size change)
+- **QuantumVisualization.jsx**:
+  - Bloch sphere: continuous rotation animation (requestAnimationFrame)
+  - Preset button click: 'is-active' class (color transition)
+  - Slider movement: immediate value update (no transition specified)
+- **MedicalDataSection.jsx**:
+  - Card hover: lift animation (likely via CSS transform transition on .is-hovered)
+  - Top strip, title, etc.: no transition specified
+- **ExplainabilitySection.jsx**:
+  - No explicit animations observed
+- **ExperimentPreview.jsx**:
+  - Confusion matrix toggle button: 'is-active' class (color transition)
+  - Metrics table: no animation
+ - ROC chart: static SVG
+- **InteractiveDemoModal.jsx**:
+  - Execute button: 'is-running' class when isExecuting=true (likely opacity/spinner animation)
+  - Patient case card click: 'is-selected' class (color transition)
+  - Feature slider: immediate update
+  - Ansatz layer button: 'is-active' class (color transition)
+  - Execute button click: triggers1.2s timeout then shows results
+  - Results panel: appears when executionFinished=true (likely fade-in via CSS)
+  - Close button: no transition specified
+- **DemoTransition.jsx**:
+  - No explicit animations observed (static content with CTA button)
+
+### Notifications/Toasts/Dialogues
+- **InteractiveDemoModal**:
+  - Full-screen modal acts as a dialog (notifications/toasts not used)
+  - Has close button in header
+  - Overlay dims background
+  - Body scroll locked while open
+- **ExperimentPreview Section**:
+  - Demo data alert banner: static notice at top of section (not a toast)
+- **Global**:
+  - No toast notification system observed (e.g., no temporary popups for success/error)
+
+## 8. BACKEND CONNECTIONS
+**No actual backend connections exist in the provided code.**
+All data is static and imported from `src/data/platformData.js`.
+There are no:
+- API calls (fetch, axios, etc.)
+- WebSocket connections
+- Server-side rendering or data fetching hooks
+- Environmental variables for endpoint configuration
+- Any indication of backend integration in the UI
+
+The UI is purely a frontend demonstration / visualization tool using hardcoded/demo data.
+Interactions update local state only; no data is sent to or received from a server.
+
+---
+
+**Note**: This documentation is based solely on the provided code files. No modifications were made to the codebase during analysis.
+All observations derive from reading the JSX, CSS, and data files as presented.
+Where functionality appears simulated or mocked (e.g., loading delays, static results), it is noted as such.
+The UI is designed as an informational and exploratory demonstration of a hybrid quantum machine learning concept, not a functional production application.

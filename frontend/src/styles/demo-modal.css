@@ -1,0 +1,590 @@
+/* ==========================================================================
+   INTERACTIVE DEMO MODAL STYLES // FULL-SCREEN CLINICAL WORKBENCH
+   ========================================================================== */
+
+.demo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(4, 5, 8, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  animation: fadeIn 0.25s var(--ease-out);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.99); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.demo-modal-container {
+  width: 100%;
+  max-width: 1320px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85);
+  max-height: 92vh;
+  overflow: hidden;
+}
+
+/* Header Bar */
+.modal-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border-hairline);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.lab-logo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--quantum-cyan);
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-title {
+  font-size: 0.82rem;
+  color: var(--text-pure);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.platform-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.68rem;
+  color: var(--quantum-cyan);
+}
+
+.close-modal-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  padding: 0.45rem 0.85rem;
+  color: var(--text-primary);
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  transition: all var(--duration-fast) ease;
+}
+
+.close-modal-btn:hover {
+  border-color: var(--quantum-rose);
+  color: var(--quantum-rose);
+  background: rgba(244, 63, 94, 0.08);
+}
+
+/* Workbench Body Grid */
+.workbench-body-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.workbench-panel {
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.panel-controls {
+  border-right: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.panel-results {
+  background: var(--bg-deep);
+}
+
+.panel-section-title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+/* Patient Cases List */
+.patient-cases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.patient-case-card {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  padding: 0.85rem 1rem;
+  border-radius: 2px;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.patient-case-card:hover {
+  border-color: var(--border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.patient-case-card.is-selected {
+  border-color: var(--border-cyan);
+  background: var(--quantum-cyan-dim);
+}
+
+.patient-card-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  margin-bottom: 0.25rem;
+}
+
+.case-id {
+  color: var(--quantum-cyan);
+  font-weight: 600;
+}
+
+.case-age {
+  color: var(--text-muted);
+}
+
+.case-name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.case-modality {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+/* Clinical Context Profile */
+.clinical-profile-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-hairline);
+  padding: 0.85rem 1rem;
+  border-radius: 2px;
+}
+
+.profile-label {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.profile-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Features Slider Group */
+.features-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.feat-slider-row {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  padding: 0.65rem 0.85rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.feat-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+}
+
+.feat-name {
+  color: var(--text-secondary);
+}
+
+.feat-val {
+  color: var(--quantum-cyan);
+  font-weight: 600;
+}
+
+/* Ansatz Controls */
+.ansatz-controls-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  font-size: 0.72rem;
+}
+
+.control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.c-label {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+}
+
+.quantum-select {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-primary);
+  padding: 0.45rem 0.65rem;
+  font-size: 0.72rem;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  outline: none;
+}
+
+.layer-pill-group {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.layer-btn {
+  flex: 1;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  padding: 0.45rem;
+  font-size: 0.7rem;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: all var(--duration-fast) ease;
+}
+
+.layer-btn.is-active {
+  border-color: var(--border-cyan);
+  background: var(--quantum-cyan-dim);
+  color: var(--quantum-cyan);
+}
+
+.run-inference-btn {
+  width: 100%;
+  padding: 1.1rem;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.run-inference-btn.is-running {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin-slow 0.8s linear infinite;
+}
+
+/* Results Panel */
+.risk-outcome-card {
+  border: 1px solid var(--border-hairline);
+  padding: 1.5rem;
+  border-radius: 2px;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 1.5rem;
+  background: var(--bg-surface);
+}
+
+.risk-outcome-card.risk-high {
+  border-color: rgba(244, 63, 94, 0.4);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, var(--bg-surface) 60%);
+}
+
+.risk-outcome-card.risk-low {
+  border-color: var(--border-emerald);
+  background: linear-gradient(135deg, rgba(0, 229, 163, 0.08) 0%, var(--bg-surface) 60%);
+}
+
+.risk-eyebrow {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.risk-score-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.score-num {
+  font-size: 2.4rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  line-height: 1;
+}
+
+.risk-high .score-num {
+  color: var(--quantum-rose);
+}
+
+.risk-low .score-num {
+  color: var(--quantum-emerald);
+}
+
+.score-denom {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.risk-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.risk-high .risk-badge {
+  color: var(--quantum-rose);
+}
+
+.risk-low .risk-badge {
+  color: var(--quantum-emerald);
+}
+
+.rec-eyebrow {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.rec-text {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.55;
+}
+
+/* Observables Grid */
+.results-sub-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.sub-block-title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.observables-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+}
+
+.observable-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: 0.75rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.obs-name {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.obs-val {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.obs-val.pos {
+  color: var(--quantum-cyan);
+}
+
+.obs-val.neg {
+  color: var(--quantum-violet);
+}
+
+.obs-bar-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  position: relative;
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.obs-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+/* Shapley */
+.shapley-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.shapley-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: 0.75rem 1rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.shapley-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+}
+
+.sh-name {
+  color: var(--text-primary);
+}
+
+.sh-pct {
+  color: var(--quantum-cyan);
+  font-weight: 600;
+}
+
+.shapley-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.shapley-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--quantum-cyan), var(--quantum-emerald));
+  box-shadow: 0 0 8px var(--quantum-cyan);
+  transition: width 0.4s ease-out;
+}
+
+.sh-type {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+/* Results Telemetry */
+.results-telemetry-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: 1rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.68rem;
+}
+
+.state-line {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.state-line .lbl {
+  color: var(--text-muted);
+}
+
+.state-line .val {
+  color: var(--quantum-cyan);
+  word-break: break-all;
+}
+
+.telemetry-cols {
+  display: flex;
+  gap: 1.5rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-hairline);
+  padding-top: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .workbench-body-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-controls {
+    border-right: none;
+    border-bottom: 1px solid var(--border-hairline);
+  }
+
+  .risk-outcome-card {
+    grid-template-columns: 1fr;
+  }
+
+  .observables-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

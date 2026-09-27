@@ -1,0 +1,320 @@
+/* ==========================================================================
+   HERO SECTION STYLES // RESEARCH EDITORIAL & SCIENTIFIC HUD
+   ========================================================================== */
+
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  padding: 8.5rem var(--container-pad) 4.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 25%, rgba(13, 20, 32, 0.6) 0%, var(--bg-void) 70%);
+}
+
+.hero-particle-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-container {
+  position: relative;
+  z-index: 2;
+  max-width: var(--container-max);
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Eyebrow */
+.hero-eyebrow-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 2.2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hero-date-badge {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+/* Headline */
+.hero-headline-block {
+  max-width: 1020px;
+  margin-bottom: 2.5rem;
+}
+
+.hero-main-title {
+  font-size: clamp(2.8rem, 6.8vw, 6.2rem);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  margin-bottom: 1.8rem;
+  text-transform: uppercase;
+}
+
+.title-gradient {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, #ffffff 30%, var(--quantum-cyan) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.hero-lead-text {
+  font-size: clamp(1.05rem, 1.9vw, 1.35rem);
+  color: var(--text-secondary);
+  max-width: 780px;
+  margin: 0 auto;
+  line-height: 1.65;
+  font-weight: 400;
+}
+
+/* CTA Group */
+.hero-cta-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-bottom: 4.5rem;
+  flex-wrap: wrap;
+}
+
+.hero-btn {
+  min-width: 210px;
+  padding: 1.1rem 2rem;
+}
+
+/* Scientific Visual Frame */
+.hero-visual-frame {
+  width: 100%;
+  max-width: 1120px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 2px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75);
+}
+
+.visual-hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.5rem;
+  border-bottom: 1px solid var(--border-hairline);
+  background: rgba(8, 10, 15, 0.95);
+  font-size: 0.72rem;
+}
+
+.hud-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.hud-status-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--quantum-cyan);
+  box-shadow: 0 0 8px var(--quantum-cyan);
+}
+
+.hud-title {
+  color: var(--text-primary);
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.hud-telemetry {
+  display: flex;
+  gap: 1.5rem;
+  color: var(--text-muted);
+}
+
+.hud-telemetry span {
+  letter-spacing: 0.06em;
+}
+
+/* Image Wrapper */
+.visual-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #060709;
+}
+
+.visual-placeholder-shimmer {
+  position: absolute;
+  inset: 0;
+  background: #080a0f;
+  overflow: hidden;
+}
+
+.shimmer-scanner {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.06), transparent);
+  animation: shimmer-sweep 2.5s infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.hero-artwork-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out, transform 1.2s ease-out;
+  filter: contrast(108%) brightness(96%);
+}
+
+.hero-artwork-img.img-loaded {
+  opacity: 1;
+}
+
+.hero-visual-frame:hover .hero-artwork-img {
+  transform: scale(1.015);
+}
+
+/* HUD Reticles */
+.hud-reticle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--quantum-cyan);
+  border-style: solid;
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+.hud-reticle.top-left { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
+.hud-reticle.top-right { top: 12px; right: 12px; border-width: 1px 1px 0 0; }
+.hud-reticle.bottom-left { bottom: 12px; left: 12px; border-width: 0 0 1px 1px; }
+.hud-reticle.bottom-right { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
+
+/* Scientific Pins */
+.scientific-pin {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 5;
+  cursor: default;
+}
+
+.pin-1 { top: 32%; left: 18%; }
+.pin-2 { bottom: 28%; right: 22%; }
+
+.pin-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--quantum-cyan);
+  background: rgba(0, 240, 255, 0.2);
+  position: relative;
+}
+
+.pin-indicator::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 240, 255, 0.5);
+  animation: spin-slow 8s linear infinite;
+}
+
+.pin-tooltip {
+  background: rgba(8, 10, 15, 0.88);
+  border: 1px solid var(--border-hairline);
+  padding: 0.35rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(8px);
+  text-align: left;
+}
+
+.pin-label {
+  font-size: 0.58rem;
+  color: var(--quantum-cyan);
+  letter-spacing: 0.08em;
+}
+
+.pin-val {
+  font-size: 0.68rem;
+  color: var(--text-primary);
+}
+
+/* HUD Footer */
+.visual-hud-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0.95rem 1.5rem;
+  border-top: 1px solid var(--border-hairline);
+  background: rgba(8, 10, 15, 0.95);
+  font-size: 0.7rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-metric {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.footer-metric .label {
+  color: var(--text-muted);
+}
+
+.footer-metric .val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-section {
+    padding-top: 7rem;
+  }
+
+  .hud-telemetry {
+    display: none;
+  }
+
+  .scientific-pin {
+    display: none;
+  }
+
+  .visual-hud-footer {
+    justify-content: flex-start;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-btn {
+    width: 100%;
+  }
+}

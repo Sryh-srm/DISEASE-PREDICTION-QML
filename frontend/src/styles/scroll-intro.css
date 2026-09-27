@@ -1,0 +1,338 @@
+/* ==========================================================================
+   SCROLL INTRO STYLES // PROGRESSIVE PIPELINE REVEAL
+   ========================================================================== */
+
+.scroll-intro-section {
+  position: relative;
+  background: var(--bg-void);
+  border-top: 1px solid var(--border-hairline);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-center .section-title,
+.text-center .section-subtitle {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pipeline-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  margin-top: 3.5rem;
+  align-items: start;
+}
+
+/* Sticky Navigation Rail */
+.pipeline-nav-col {
+  position: relative;
+}
+
+.pipeline-nav-sticky {
+  position: sticky;
+  top: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pipeline-rail-track {
+  position: absolute;
+  top: 24px;
+  left: 20px;
+  bottom: 180px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  z-index: 0;
+}
+
+.pipeline-rail-progress {
+  width: 100%;
+  background: linear-gradient(180deg, var(--quantum-cyan), var(--quantum-emerald));
+  transition: height 0.3s ease-out;
+  box-shadow: 0 0 10px var(--quantum-cyan);
+}
+
+.pipeline-steps-list {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pipeline-step-trigger {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+  width: 100%;
+}
+
+.pipeline-step-trigger:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--border-hairline);
+}
+
+.pipeline-step-trigger.is-active {
+  background: var(--bg-surface);
+  border-color: var(--border-cyan);
+}
+
+.step-num {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 2px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-deep);
+  color: var(--text-secondary);
+  transition: all var(--duration-fast) ease;
+  flex-shrink: 0;
+}
+
+.pipeline-step-trigger.is-active .step-num {
+  border-color: var(--quantum-cyan);
+  background: var(--quantum-cyan-dim);
+  color: var(--quantum-cyan);
+}
+
+.pipeline-step-trigger.is-passed .step-num {
+  border-color: var(--quantum-emerald);
+  color: var(--quantum-emerald);
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-label {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: color var(--duration-fast) ease;
+}
+
+.pipeline-step-trigger.is-active .step-label {
+  color: var(--quantum-cyan);
+}
+
+.step-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+/* Live Vector Card */
+.live-vector-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: 1.25rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.vector-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.live-tag {
+  font-size: 0.65rem;
+  color: var(--quantum-emerald);
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.vector-dim {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.vector-math-block {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  padding: 0.85rem;
+  font-size: 0.82rem;
+  color: var(--quantum-cyan);
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+.vector-readout-text {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Transformation Cards Column */
+.pipeline-cards-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.transformation-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  padding: clamp(2rem, 3.5vw, 3rem);
+  border-radius: 2px;
+  position: relative;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.transformation-card.card-focused {
+  border-color: var(--border-cyan);
+  background: var(--bg-surface-elevated);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
+}
+
+.card-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  font-size: 0.72rem;
+}
+
+.badge-step {
+  color: var(--quantum-cyan);
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.badge-name {
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.card-heading {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  margin-bottom: 0.4rem;
+}
+
+.card-sub-lead {
+  font-size: 0.82rem;
+  color: var(--quantum-cyan);
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
+}
+
+.card-description {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: 1.75rem;
+}
+
+/* Formula Box */
+.formula-box {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hairline);
+  padding: 1.1rem 1.4rem;
+  border-radius: 2px;
+  margin-bottom: 1.75rem;
+}
+
+.formula-header {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.6rem;
+}
+
+.formula-code code {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* Indicators */
+.indicators-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1.75rem;
+}
+
+.indicator-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  border-radius: 2px;
+}
+
+.ind-bullet {
+  width: 5px;
+  height: 5px;
+  background: var(--quantum-emerald);
+  border-radius: 50%;
+}
+
+/* Footer Telemetry */
+.card-footer-telemetry {
+  border-top: 1px solid var(--border-hairline);
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  flex-wrap: wrap;
+}
+
+.telemetry-key {
+  color: var(--text-muted);
+}
+
+.telemetry-val {
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .pipeline-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pipeline-nav-sticky {
+    position: static;
+  }
+
+  .pipeline-rail-track {
+    display: none;
+  }
+
+  .pipeline-steps-list {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.75rem;
+  }
+
+  .pipeline-step-trigger {
+    min-width: 220px;
+  }
+}
