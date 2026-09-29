@@ -1,0 +1,44 @@
+{
+  "Hybrid Committee (stacked)": {
+    "accuracy": 0.8689,
+    "precision": 0.8846,
+    "recall": 0.8214,
+    "f1": 0.8519
+  },
+  "Quantum Kernel SVM": {
+    "accuracy": 0.7213,
+    "precision": 0.6774,
+    "recall": 0.7500,
+    "f1": 0.7119
+  },
+  "VQC Ensemble": {
+    "accuracy": 0.7869,
+    "precision": 0.8000,
+    "recall": 0.7143,
+    "f1": 0.7547
+  },
+  "VQC": {
+    "accuracy": 0.7541,
+    "precision": 0.7241,
+    "recall": 0.7500,
+    "f1": 0.7368
+  },
+  "Random Forest": {
+    "accuracy": 0.8361,
+    "precision": 0.8214,
+    "recall": 0.8214,
+    "f1": 0.8214
+  },
+  "SVM": {
+    "accuracy": 0.8525,
+    "precision": 0.8519,
+    "recall": 0.8214,
+    "f1": 0.8364
+  },
+  "Logistic Regression": {
+    "accuracy": 0.8361,
+    "precision": 0.8214,
+    "recall": 0.8214,
+    "f1": 0.8214
+  }
+}

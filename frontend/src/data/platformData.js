@@ -8,8 +8,7 @@ export const PIPELINE_STAGES = [
     name: "Medical Data Acquisition",
     subtitle: "Heart Disease Clinical Measurements",
     description: "Standardized clinical measurements including patient demographics, vital signs, blood biomarkers, and diagnostic test results are acquired and prepared for analysis.",
-    math: "\\mathbf{X}_{raw} \\in \\mathbb{R}^{n \\times 13}",
-    readout: "Features: 13 clinical variables // Samples: 303 (Cleveland) / 918 (Combined)",
+    readout: "Features: 13 clinical variables // Samples: 303 (Cleveland)",
     indicators: ["Demographics", "Vital Signs", "Blood Biomarkers", "Diagnostic Tests"]
   },
   {
@@ -18,7 +17,6 @@ export const PIPELINE_STAGES = [
     name: "Data Preprocessing Pipeline",
     subtitle: "Imputation, Standardization & Feature Selection",
     description: "Missing values are imputed with median, features are standardized, and the top 4 most predictive features are selected using supervised ANOVA.",
-    math: "\\vec{x}_{processed} = \\text{MinMax}\\left(\\text{StdScaler}\\left(\\text{Imputer}\\left(\\mathbf{X}_{raw}\\right)\\right)\\right)",
     readout: "Method: Median → StandardScaler → SelectKBest(k=4) → MinMax[0,π]",
     indicators: ["Missing Value Imputation", "Feature Standardization", "ANOVA Feature Selection", "Quantum Angle Scaling"]
   },
@@ -28,7 +26,6 @@ export const PIPELINE_STAGES = [
     name: "Selected Clinical Features",
     subtitle: "Top 4 Predictive Characteristics",
     description: "Supervised ANOVA identifies thal, thalach, ca, and exang as the most discriminative features for heart disease prediction features.",
-    math: "\\vec{x}_{selected} = [\\text{thal}, \\text{thalach}, \\text{ca}, \\text{exang}]^T",
     readout: "Selected: thal, thalach, ca, exang // Method: F-classif ANOVA",
     indicators: ["Thalassemia", "Maximum Heart Rate", "Number of Major Vessels", "Exercise Induced Angina"]
   }
@@ -233,7 +230,8 @@ export const MEDICAL_MODULES = [
     dimension: "GENOMICS",
     name: "Quantum Genome Analyzer",
     description: "Analyzes genetic variants and epigenetic markers to identify hereditary risk factors and gene-environment interactions in cardiovascular pathogenesis.",
-    target: "Polygenic Risk Scores • SNP Pathways • Mitochondrial DNA • Telomere Length"
+    target: "Polygenic Risk Scores • SNP Pathways • Mitochondrial DNA • Telomere Length",
+    status: "Waiting for Data"
   },
   {
     id: "MOD-002",
@@ -241,7 +239,8 @@ export const MEDICAL_MODULES = [
     dimension: "PROTEOMICS",
     name: "Plasma Biomarker Profiler",
     description: "Detects and quantifies low-abundance protein biomarkers in blood plasma to identify early-stage inflammatory and metabolic dysregulation patterns.",
-    target: "Cardiac Troponins • BNP/NT-proBNP • Inflammatory Cytokines • Lipoprotein Subclasses"
+    target: "Cardiac Troponins • BNP/NT-proBNP • Inflammatory Cytokines • Lipoprotein Subclasses",
+    status: "Still in Research"
   },
   {
     id: "MOD-003",
@@ -249,7 +248,8 @@ export const MEDICAL_MODULES = [
     dimension: "HEMODYNAMICS",
     name: "Vascular Hemodynamics Mapper",
     description: "Models blood flow dynamics and arterial stiffness to detect early vascular dysfunction before structural changes become visible on imaging.",
-    target: "Pulse Wave Velocity • Endothelial Function • Coronary Flow Reserve • Microvascular Resistance"
+    target: "Pulse Wave Velocity • Endothelial Function • Coronary Flow Reserve • Microvascular Resistance",
+    status: "In Development"
   },
   {
     id: "MOD-004",
@@ -257,7 +257,8 @@ export const MEDICAL_MODULES = [
     dimension: "ELECTROPHYSIOLOGY",
     name: "Cardiac Electrophysics Scanner",
     description: "Analyzes electrical conduction patterns and repolarization abnormalities to identify arrhythmogenic substrates and ischemic precursors.",
-    target: "QT Interval Variability • Signal-Averaged ECG • Late Potentials • Heart Rate Turbulence"
+    target: "QT Interval Variability • Signal-Averaged ECG • Late Potentials • Heart Rate Turbulence",
+    status: "Building"
   },
   {
     id: "MOD-005",
@@ -265,7 +266,8 @@ export const MEDICAL_MODULES = [
     dimension: "METABOLOMICS",
     name: "Multi-Analyte Plasma Panel",
     description: "Comprehensive metabolic profiling of circulating metabolites to identify microbiome-derived toxins and nutritional deficiencies affecting cardiac health.",
-    target: "Trimethylamine N-oxide • Short-Chain Fatty Acids • Bile Acids • Amino Acid Imbalances"
+    target: "Trimethylamine N-oxide • Short-Chain Fatty Acids • Bile Acids • Amino Acid Imbalances",
+    status: "Waiting for Data"
   }
 ];
 
@@ -285,5 +287,29 @@ export const EXPERIMENT_BENCHMARKS = {
     qubitCount: 4,
     circuitDepth: 12,
     measurementShots: 1024
+  }
+};
+
+// Final hybrid committee performance metrics from project evaluation
+export const HYBRID_COMMITTEE_METRICS = {
+  accuracy: "85.25%",
+  precision: "85.19%",
+  recall: "82.14%",
+  f1: "83.64%"
+};
+
+// Model evaluation results from project training
+export const MODEL_EVALUATION_RESULTS = {
+  "Random Forest": {
+    accuracy: "83.61%",
+    precision: "82.14%",
+    recall: "82.14%",
+    f1: "82.14%"
+  },
+  "Hybrid Quantum Committee": {
+    accuracy: "85.25%",
+    precision: "85.19%",
+    recall: "82.14%",
+    f1: "83.64%"
   }
 };

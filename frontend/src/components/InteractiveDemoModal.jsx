@@ -21,6 +21,10 @@ export default function InteractiveDemoModal({ isOpen, onClose }) {
   const [isFeatureLoading, setIsFeatureLoading] = useState(false);
   const [isHealthLoading, setIsHealthLoading] = useState(true);
 
+  // Filter patient cases: high risk (HIGH risk level) and others
+  const highRiskCases = PATIENT_CASES.filter(caseObj => caseObj.quantumInference?.riskLevel === 'HIGH');
+  const otherCases = PATIENT_CASES.filter(caseObj => caseObj.quantumInference?.riskLevel !== 'HIGH');
+
   const activeCase = PATIENT_CASES.find((c) => c.id === selectedCaseId) || PATIENT_CASES[0];
 
   // Initialize form with demo case data
@@ -133,26 +137,7 @@ export default function InteractiveDemoModal({ isOpen, onClose }) {
     }
   };
 
-  // Run simulation (fallback for when backend is unavailable)
-  const handleRunSimulation = () => {
-    setIsExecuting(true);
-    setExecutionFinished(false);
-    setError(null);
-
-    setTimeout(() => {
-      setIsExecuting(false);
-      setExecutionFinished(true);
-      // Use illustrative data from demo case when backend unavailable
-      setPredictionResult({
-        probability: activeCase.quantumInference?.diseaseRisk || 0.5,
-        risk: activeCase.quantumInference?.riskLevel || 'UNKNOWN',
-        recommendation: activeCase.quantumInference?.recommendation || 'Consult healthcare provider',
-        threshold: 0.5,
-        model: 'demo-illustrative'
-      });
-    }, 1200);
-  };
-
+  
   // Determine if we should use real backend or simulation
   const shouldUseBackend = backendStatus !== null;
 
@@ -166,7 +151,7 @@ export default function InteractiveDemoModal({ isOpen, onClose }) {
               <Cpu size={16} />
             </div>
             <div className="header-titles">
-              <span className="platform-title mono">HQ-MEDNET // CLINICAL QUANTUM INFERENCE WORKBENCH</span>
+              <span className="platform-title mono">QueMeds // CLINICAL QUANTUM INFERENCE WORKBENCH</span>
               <span className="platform-sub mono">SIMULATOR: 4-QUBIT STATEVECTOR // PROTOCOL: IEEE-VQC-MED</span>
             </div>
           </div>
@@ -198,25 +183,84 @@ export default function InteractiveDemoModal({ isOpen, onClose }) {
 
             {/* Patient Case Selector Cards */}
             <div className="patient-cases-list">
-              {PATIENT_CASES.map((patient) => (
-                <button
-                  key={patient.id}
-                  className={`patient-case-card ${patient.id === selectedCaseId ? 'active' : ''}`}
-                  onClick={() => handleCaseChange(patient.id)}
-                >
-                  <div className="case-header">
-                    <span className="case-id">{patient.id}</span>
-                    <span className="case-type mono">ILLUSTRATIVE DEMO</span>
-                  </div>
-                  <div className="case-details">
-                    <h3 className="case-title">{patient.name}</h3>
-                    <p className="case-subtitle mono">{patient.clinicalContext}</p>
-                  </div>
-                  <div className="case-footer mono">
-                    <span>Age: {patient.age} • Sex: {patient.sex === 1 ? 'Male' : 'Female'}</span>
-                  </div>
-                </button>
-              ))}
+              {/* High Risk Patients Section */}
+              <div className="patient-cases-section">
+                <h3 className="section-title">High Risk Patients</h3>
+                <div className="patient-cases-grid">
+                  {/* Show up to 2 high-risk cases */}
+                  {highRiskCases.slice(0, 2).map((patient) => (
+                    <button
+                      key={patient.id}
+                      className={`patient-case-card ${patient.id === selectedCaseId ? 'active' : ''}`}
+                      onClick={() => handleCaseChange(patient.id)}
+                    >
+                      <div className="case-header">
+                        <span className="case-id">{patient.id}</span>
+                        <span className="case-type mono">ILLUSTRATIVE DEMO</span>
+                      </div>
+                      <div className="case-details">
+                        <h3 className="case-title">{patient.name}</h3>
+                        <p className="case-subtitle mono">{patient.clinicalContext}</p>
+                      </div>
+                      <div className="case-footer mono">
+                        <span>Age: {patient.age} • Sex: {patient.sex === 1 ? 'Male' : 'Female'}</span>
+                      </div>
+                    </button>
+                  ))}
+                  {/* If we have less than 2 high-risk cases, fill with placeholders */}
+                  {highRiskCases.length < 2 && Array.from({ length: 2 - highRiskCases.length }).map((_, index) => (
+                    <button
+                      key={`placeholder-${index}`}
+                      className="patient-case-card placeholder"
+                      disabled
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <div className="case-header">
+                        <span className="case-id">N/A</span>
+                        <span className="case-type mono">PLACEHOLDER</span>
+                      </div>
+                      <div className="case-details">
+                        <h3 className="case-title">Not Available</h3>
+                        <p className="case-subtitle mono">No additional high-risk demo case data available</p>
+                      </div>
+                      <div className="case-footer mono">
+                        <span>Age: N/A • Sex: N/A</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Other Patients Section */}
+              <div className="patient-cases-section">
+                <h3 className="section-title">Other Patients</h3>
+                <div className="patient-cases-grid">
+                  {/* Show other cases, excluding any that were already shown in high-risk section */}
+                  {otherCases
+                    .filter(caseObj =>
+                      !highRiskCases.slice(0, 2).some(highRisk => highRisk.id === caseObj.id)
+                    )
+                    .map((patient) => (
+                      <button
+                        key={patient.id}
+                        className={`patient-case-card ${patient.id === selectedCaseId ? 'active' : ''}`}
+                        onClick={() => handleCaseChange(patient.id)}
+                      >
+                        <div className="case-header">
+                          <span className="case-id">{patient.id}</span>
+                          <span className="case-type mono">ILLUSTRATIVE DEMO</span>
+                        </div>
+                        <div className="case-details">
+                          <h3 className="case-title">{patient.name}</h3>
+                          <p className="case-subtitle mono">{patient.clinicalContext}</p>
+                        </div>
+                        <div className="case-footer mono">
+                          <span>Age: {patient.age} • Sex: {patient.sex === 1 ? 'Male' : 'Female'}</span>
+                        </div>
+                      </button>
+                    ))}
+                </div>
+              </div>
             </div>
 
             {/* 13-Feature Input Form */}
@@ -504,25 +548,15 @@ export default function InteractiveDemoModal({ isOpen, onClose }) {
             <div className="panel-action-bar">
               <button
                 className={`action-button primary ${isExecuting ? 'executing' : ''}`}
-                onClick={shouldUseBackend ? handleRunPrediction : handleRunSimulation}
+                onClick={handleRunPrediction}
                 disabled={isExecuting}
               >
-                {isExecuting ? 'RUNNING INFERENCE...' :
-                 shouldUseBackend ? 'RUN PREDICTION (BACKEND)' : 'RUN SIMULATION (DEMO)'}
+                {isExecuting ? 'RUNNING INFERENCE...' : 'RUN PREDICTION (BACKEND)'}
               </button>
-
-              {backendStatus && !isExecuting && (
-                <button
-                  className="action-button secondary"
-                  onFetch={handleRunSimulation}
-                >
-                  RUN SIMULATION (DEMO)
-                </button>
-              )}
 
               {!isExecuting && (
                 <button
-                  className="action-button tertiary"
+                  className="action-button secondary"
                   onClick={handleCaseChange}
                 >
                   LOAD DEMO CASE

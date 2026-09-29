@@ -264,7 +264,7 @@ def main():
     print()
 
     print("Step 4c: Training quantum kernel SVM (flagship pure-quantum model)...")
-    qkernel = QuantumKernelClassifier(n_qubits=4, layers=2)
+    qkernel = QuantumKernelClassifier(n_qubits=4, layers=4)
     qkernel.fit(X_train_transformed, y_train.values)
     # 5-fold CV tuning of the kernel-SVM regularization C on the
     # cached precomputed kernel matrix (no extra circuit runs).
@@ -274,7 +274,7 @@ def main():
     for C in [0.1, 0.5, 1.0, 3.0, 10.0]:
         accs = []
         for tri, vai in cv_sk.split(K_tr, y_train.values):
-            trial = QuantumKernelClassifier(n_qubits=4, layers=2, C=C)
+            trial = QuantumKernelClassifier(n_qubits=4, layers=4, C=C)
             trial._X_train = X_train_transformed[tri]
             trial.fit_from_kernel(K_tr[np.ix_(tri, tri)], y_train.values[tri], C)
             accs.append(
@@ -307,7 +307,7 @@ def main():
 
     y_pred_ens = ensemble.predict(X_test_transformed)
     ens_metrics = _metrics(y_test, y_pred_ens)
-    print(f"  VQC Ensemble (7 members) Accuracy: {ens_metrics['accuracy']:.4f}")
+    print(f"  VQC Ensemble (5 members) Accuracy: {ens_metrics['accuracy']:.4f}")
 
     y_pred_qk = qkernel.predict(X_test_transformed)
     qk_metrics = _metrics(y_test, y_pred_qk)
@@ -324,10 +324,10 @@ def main():
         return (p >= 0.5).astype(int)
 
     y_pred_committee = _quantum_committee(X_test_transformed)
-    committee_metrics = _metrics(y_test, y_pred_committee)
+    quantum_committee_metrics = _metrics(y_test, y_pred_committee)
     print(
         f"  Quantum Committee (kernel + ensemble + VQC) Accuracy: "
-        f"{committee_metrics['accuracy']:.4f}"
+        f"{quantum_committee_metrics['accuracy']:.4f}"
     )
     print()
 
@@ -336,8 +336,6 @@ def main():
     classical_results, rf_importance, fitted_classical = train_classical_baselines(
         X_train_transformed, X_test_transformed, y_train.values, y_test.values
     )
-    classical_svm_proba = fitted_classical["SVM"].predict_proba
-    classical_lr_proba = fitted_classical["Logistic Regression"].predict_proba
     # Expand the RF importances of the selected features to a full
     # 13-vector (zeros elsewhere) for plotting and explainability.
     feature_importance = np.zeros(len(FEATURES))
@@ -394,22 +392,30 @@ def main():
         would overwrite them)."""
         members = _make_members()
         members["qkernel"] = QuantumKernelClassifier(
-            n_qubits=4, layers=2, C=best_C
+            n_qubits=4, layers=4, C=best_C
         )
         members["ensemble"] = QuantumEnsemble(
-            n_qubits=4, layers=4, n_members=3, epochs=120, seed=42
+            n_qubits=4, layers=4, n_members=5, epochs=120
         )
-        members["vqc"] = QuantumModel(n_qubits=4, layers=4, epochs=120, seed=42)
+        members["vqc"] = QuantumModel(
+            n_qubits=4, layers=4, epochs=120
+        )
         return members
 
     cv_stack = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    oof = np.zeros((X_train_transformed.shape[0], len(member_names)))
-    for fi, (tri, vai) in enumerate(cv_stack.split(X_train_transformed, y_train.values)):
+    oof = np.zeros((X_train.shape[0], len(member_names)))
+    for fi, (tri, vai) in enumerate(cv_stack.split(X_train, y_train.values)):
         print(f"    stack fold {fi + 1}/5...")
+        # REFIT the whole preprocessor (imputer+scaler+SelectorKBest)
+        # on the fold's train partition only, so feature selection
+        # never sees validation-fold labels (leakage-free selector).
+        fold_prep = fit_preprocessor(X_train.iloc[tri], n_components=4, y=y_train.values[tri])
+        Xtr_fold = fold_prep.transform(X_train.iloc[tri])
+        Xva_fold = fold_prep.transform(X_train.iloc[vai])
         fold_members = _make_fold_members()
         for j, name in enumerate(member_names):
-            _fit_member(fold_members[name], X_train_transformed[tri], y_train.values[tri])
-            oof[vai, j] = fold_members[name].predict_proba(X_train_transformed[vai])[:, 1]
+            _fit_member(fold_members[name], Xtr_fold, y_train.values[tri])
+            oof[vai, j] = fold_members[name].predict_proba(Xva_fold)[:, 1]
 
     meta_learner = LogisticRegression(max_iter=2000).fit(oof, y_train.values)
     print(f"    meta weights: {dict(zip(member_names, np.round(meta_learner.coef_[0], 3)))}")

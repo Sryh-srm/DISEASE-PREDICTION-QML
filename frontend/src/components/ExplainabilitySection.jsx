@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Eye, Compass, FileCheck, ArrowRight, Lock, Sparkles } from 'lucide-react';
+import { HYBRID_COMMITTEE_METRICS } from '../data/platformData';
 import '../styles/explainability.css';
 
 export default function ExplainabilitySection() {
@@ -34,8 +35,8 @@ export default function ExplainabilitySection() {
           <span className="section-eyebrow">// SECTION 06: SCIENTIFIC INTEGRITY</span>
           <h2 className="section-title">NOT JUST A PREDICTION.</h2>
           <p className="section-subtitle">
-            A diagnostic prediction without clinical interpretability is unsafe for medicine. 
-            We engineer quantum representations that prioritize explainability, privacy preservation, 
+            A diagnostic prediction without clinical interpretability is unsafe for medicine.
+            We engineer quantum representations that prioritize explainability, privacy preservation,
             and transparent verification.
           </p>
         </div>
@@ -97,6 +98,17 @@ export default function ExplainabilitySection() {
           ))}
         </div>
 
+        {/* Final ML + Hybrid Result Banner */}
+        <div className="scientific-ethics-banner mono">
+          <div className="ethics-tag">
+            <span className="tag-dot"></span>
+            FINAL ML + HYBRID RESULT
+          </div>
+          <p className="ethics-text">
+            Accuracy: {HYBRID_COMMITTEE_METRICS.accuracy} • Precision: {HYBRID_COMMITTEE_METRICS.precision} • Recall: {HYBRID_COMMITTEE_METRICS.recall} • F1: {HYBRID_COMMITTEE_METRICS.f1}
+          </p>
+        </div>
+
         {/* Scientific Responsibility Callout Banner */}
         <div className="scientific-ethics-banner mono">
           <div className="ethics-tag">
@@ -104,8 +116,8 @@ export default function ExplainabilitySection() {
             RESEARCH DISCLOSURE & RIGOR
           </div>
           <p className="ethics-text">
-            Notice: Current quantum implementations rely on statevector simulators and early NISQ devices. 
-            All clinical utility metrics represent exploratory research models designed to investigate 
+            Notice: Current quantum implementations rely on statevector simulators and early NISQ devices.
+            All clinical utility metrics represent exploratory research models designed to investigate
             potential quantum advantage boundaries, not definitive diagnostic claims.
           </p>
         </div>

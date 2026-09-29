@@ -34,7 +34,7 @@ export default function Navigation({ onOpenDemo }) {
             <div className="quantum-ring"></div>
           </div>
           <div className="brand-text">
-            <span className="brand-name">HQ-MEDNET</span>
+            <span className="brand-name">QueMeds</span>
             <span className="brand-sub">QUANTUM // ONCOLOGY & NEURO</span>
           </div>
         </a>

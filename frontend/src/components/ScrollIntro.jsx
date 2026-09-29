@@ -110,14 +110,7 @@ export default function ScrollIntro() {
                 <p className="card-sub-lead mono">{st.subtitle}</p>
                 <p className="card-description">{st.description}</p>
 
-                {/* Mathematical Formulation Display */}
-                <div className="formula-box">
-                  <div className="formula-header mono">MATHEMATICAL FORMULATION</div>
-                  <div className="formula-code mono">
-                    <code>{st.math}</code>
-                  </div>
-                </div>
-
+                
                 {/* Key Research Indicators */}
                 <div className="indicators-grid">
                   {st.indicators.map((ind, i) => (

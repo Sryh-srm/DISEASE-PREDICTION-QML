@@ -14,7 +14,7 @@ export default function MedicalDataSection({ onSelectModuleDemo }) {
           <span className="section-eyebrow">// SECTION 05: RESEARCH MODALITIES</span>
           <h2 className="section-title">ENGINEERED FOR MULTI-SCALE PATHOLOGY.</h2>
           <p className="section-subtitle">
-            Five specialized quantum processing modules designed to isolate elusive pre-symptomatic 
+            Five specialized quantum processing modules designed to isolate elusive pre-symptomatic
             disease signatures across spatial, temporal and molecular clinical modalities.
           </p>
         </div>
@@ -50,33 +50,10 @@ export default function MedicalDataSection({ onSelectModuleDemo }) {
                 </div>
               </div>
 
-              {/* Quantum Mechanism */}
-              <div className="module-quantum-mechanism">
-                <span className="mechanism-eyebrow mono">QUANTUM KERNEL MECHANISM:</span>
-                <p className="mechanism-text">{module.quantumAdvantage}</p>
-              </div>
-
-              {/* Features Extracted */}
-              <div className="module-features-list">
-                <span className="features-head mono">PARAMETERIZED CHANNELS:</span>
-                <div className="features-tags-wrap mono">
-                 {(module.features || []).map((feat, fIdx) => (
-                    <span key={fIdx} className="feature-pill">
-                      {feat}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Benchmark Delta Notice */}
-              <div className="module-benchmark-footer mono">
-                <div className="benchmark-text">
-                  <span className="perf-label">BENCHMARK DELTA:</span>
-                  <span className="perf-val">{module.baselineDelta}</span>
-                </div>
-                <div className="benchmark-dataset">
-                  <span>COHORT: {module.dataset}</span>
-                </div>
+              {/* Status Information */}
+              <div className="module-status mono">
+                <span className="status-label">STATUS:</span>
+                <span className="status-value">{module.status}</span>
               </div>
 
               {/* Corner Decorative Reticles */}

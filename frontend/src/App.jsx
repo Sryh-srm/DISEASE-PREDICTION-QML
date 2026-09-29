@@ -8,7 +8,6 @@ import QuantumVisualization from './components/QuantumVisualization';
 import MedicalDataSection from './components/MedicalDataSection';
 import ExplainabilitySection from './components/ExplainabilitySection';
 import ExperimentPreview from './components/ExperimentPreview';
-import DemoTransition from './components/DemoTransition';
 import Footer from './components/Footer';
 import InteractiveDemoModal from './components/InteractiveDemoModal';
 import CosmicTunnelBackground from './components/CosmicTunnelBackground';
@@ -104,7 +103,7 @@ export default function App() {
         <ExperimentPreview />
 
         {/* 9. Dramatic Scroll Transition to Interactive Platform */}
-        <DemoTransition onOpenDemo={handleOpenDemo} />
+        {/* <DemoTransition onOpenDemo={handleOpenDemo} /> */}
       </main>
 
       {/* 10. Final Research Manifesto Statement & Credentials */}
