@@ -185,7 +185,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://disease-prediction-bjs2dn63v-quantedge-sryh-srm.vercel.app"
+        "https://disease-prediction-davo9kxd9-quantedge-sryh-srm.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
